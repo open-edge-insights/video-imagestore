@@ -1,11 +1,15 @@
 import redis
 import uuid
+from pytimeparse.timeparse import timeparse
 
 
-class redisConnect:
-    def __init__(self, host, port, policy):
-        self.redis_db = redis.StrictRedis(host=host, port=port, db=0)
-        self.policy = policy
+class RedisConnect:
+
+    def __init__(self, config):
+        self.redis_db = redis.StrictRedis(host=config["Host"],
+                                          port=config["Port"],
+                                          db=0)
+        self.retention = timeparse(config["Retention"])
 
     def getDataFromRedis(self, keyname):
         """
@@ -36,12 +40,12 @@ class redisConnect:
         """
             Base implementation to check key exists or not
         """
-        Status = ()
+        status = ()
         try:
-            Status = True, self.redis_db.exists(keyname)
+            status = True, self.redis_db.exists(keyname)
         except Exception as e:
-            Status = output.handleOut('BaseImplError', e)
-        return Status
+            status = output.handleOut('BaseImplError', e)
+        return status
 
     def removeFromRedis(self, keyname):
         """
@@ -77,8 +81,10 @@ class redisConnect:
         returndata = ()
         try:
             if(not self.isKeyExistsinRedis(keyname)[1]):
-                if self.policy:
-                    store = self.redis_db.set(keyname, binarydata, self.policy)
+                if self.retention:
+                    store = self.redis_db.set(keyname,
+                                              binarydata,
+                                              self.retention)
                 else:
                     store = self.redis_db.set(keyname, binarydata)
 

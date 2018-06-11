@@ -1,6 +1,6 @@
 from ImageStore.py.inmemory.inmemorystore import InMemory
-from ImageStore.py import settings as config
 from ImageStore.py import output as output
+from DataAgent.da_grpc.client.client import GrpcClient
 
 
 class ImageStore():
@@ -17,7 +17,12 @@ class ImageStore():
             operations get's handled
 
         """
-        self.memoryType = None
+        self.config = GrpcClient.GetConfigInt("RedisCfg")
+
+        # TODO: plan a better approach to set this config later, not to be in
+        # DataAgent.conf file as it's not intended to
+        # be known to user
+        self.config["InMemory"] = "redis"
 
     def _initializeinMemory(self):
         """
@@ -25,12 +30,13 @@ class ImageStore():
             with config parameters
 
         """
-        self.config = config.value
-        self.policy = self.config.retentionpolicy
+        # config = config.value
+        # policy = self.config.retentionpolicy
         try:
-            self.inmemoryredis = InMemory(self.config.inmemory, self.policy)
+            self.inmemoryredis = InMemory(self.config)
         except Exception as e:
-            raise Exception(output.handleOut('NotSupported', self.memoryType + " "+e))
+            raise Exception(output.handleOut('NotSupported',
+                            self.memoryType + " "+e))
 
     def setStorageType(self, memoryType):
         """
@@ -43,9 +49,11 @@ class ImageStore():
             if self.memoryType == 'inmemory':
                 self._initializeinMemory()
             else:
-                raise Exception(output.handleOut('NotSupported', self.memoryType))
+                raise Exception(output.handleOut('NotSupported',
+                                                 self.memoryType))
         else:
-            raise Exception(output.handleOut('NotSupported', memoryType + " "+e))
+            raise Exception(output.handleOut('NotSupported',
+                                             memoryType + " "+e))
 
     def getKeyList(self):
         """

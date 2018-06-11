@@ -1,5 +1,5 @@
-from ImageStore.py.inmemory.redisStore.redis import redisConnect
-from ImageStore.py import settings as config
+from ImageStore.py.inmemory.redisStore.redis import RedisConnect
+from DataAgent.da_grpc.client.client import GrpcClient
 from ImageStore.py import output as output
 
 
@@ -13,7 +13,7 @@ class InMemory():
 
     """
 
-    def __init__(self, inMemoryType, policy):
+    def __init__(self, config):
         """
             Instantiate the Objects based on inMemoryType and set defaults
             This Accepts inMemoryType and Policy as it's arguments. Based on
@@ -21,13 +21,9 @@ class InMemory():
             will be handled
 
         """
-        self.inMemoryType = inMemoryType.lower()
-        self.config = config.value
-        if self.inMemoryType == self.config.inmemory:
-            self.config = config.value
-            self.policy = policy
-            self.redisStore = redisConnect(host=self.config.host, \
-            port=self.config.port, policy=self.policy)
+        self.inMemoryType = config["InMemory"].lower()
+        if self.inMemoryType == "redis":
+            self.redisStore = RedisConnect(config)
         else:
             print(output.handleOut('NotSupported', self.inMemoryType))
 
@@ -39,7 +35,7 @@ class InMemory():
 
         """
         returndata = ()
-        if self.inMemoryType == self.config.inmemory:
+        if self.inMemoryType == "redis":
             returndata = self.redisStore.getKeyListfromRedis()
         else:
             returndata = output.handleOut('NotSupported', self.inMemoryType)
@@ -53,7 +49,7 @@ class InMemory():
 
         """
         returndata = ()
-        if self.inMemoryType == self.config.inmemory:
+        if self.inMemoryType == "redis":
             returndata = self.redisStore.getDataFromRedis(keyname)
         else:
             returndata = output.handleOut('NotSupported', self.inMemoryType)
@@ -68,7 +64,7 @@ class InMemory():
 
         """
         returndata = ()
-        if self.inMemoryType == self.config.inmemory:
+        if self.inMemoryType == "redis":
             returndata = self.redisStore.storeDatainRedis(binarydata)
         else:
             returndata = output.handleOut('NotSupported', self.inMemoryType)
@@ -83,7 +79,7 @@ class InMemory():
 
         """
         returndata = ()
-        if self.inMemoryType == self.config.inmemory:
+        if self.inMemoryType == "redis":
             returndata = self.redisStore.removeFromRedis(keyname)
         else:
             returndata = output.handleOut('NotSupported', self.inMemoryType)
