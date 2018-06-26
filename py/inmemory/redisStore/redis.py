@@ -6,9 +6,12 @@ from pytimeparse.timeparse import timeparse
 class RedisConnect:
 
     def __init__(self, config):
-        self.redis_db = redis.StrictRedis(host=config["Host"],
-                                          port=config["Port"],
-                                          db=0)
+        try:
+            self.redis_db = redis.StrictRedis(host=config["Host"],
+                                              port=config["Port"],
+                                              db=0)
+        except Exception as e:
+            raise DAException("Seems to be some issue with Redis. Exception: {0}".format(e))
         self.retention = timeparse(config["Retention"])
 
     def getDataFromRedis(self, keyname):
@@ -22,7 +25,7 @@ class RedisConnect:
             else:
                 returndata = False, 'This is key is not in inmemory (redis)'
         except Exception as e:
-            returndata = output.handleOut('BaseImplError', e)
+            raise e
         return returndata
 
     def getKeyListfromRedis(self):
@@ -33,7 +36,7 @@ class RedisConnect:
         try:
             fileslist = True, self.redis_db.keys()
         except Exception as e:
-            returndata = output.handleOut('BaseImplError', e)
+            raise e
         return returndata
 
     def isKeyExistsinRedis(self, keyname):
@@ -44,7 +47,7 @@ class RedisConnect:
         try:
             status = True, self.redis_db.exists(keyname)
         except Exception as e:
-            status = output.handleOut('BaseImplError', e)
+            raise e
         return status
 
     def removeFromRedis(self, keyname):
@@ -62,7 +65,7 @@ class RedisConnect:
             else:
                 returndata = False, 'This is key is not in inmemory (redis)'
         except Exception as e:
-            returndata = output.handleOut('BaseImplError', e)
+            raise e
         return returndata
 
     def generateRedisKey(self):
@@ -83,8 +86,8 @@ class RedisConnect:
             if(not self.isKeyExistsinRedis(keyname)[1]):
                 if self.retention:
                     store = self.redis_db.set(keyname,
-                                              binarydata,
-                                              self.retention)
+                                            binarydata,
+                                            self.retention)
                 else:
                     store = self.redis_db.set(keyname, binarydata)
 
@@ -92,7 +95,6 @@ class RedisConnect:
             else:
                 returndata = False, 'Already Key exists'
         except Exception as e:
-            # print("Came to an Exception", e)
-            returndata = output.handleOut('BaseImplError', e)
+            raise e
 
         return returndata

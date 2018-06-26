@@ -64,11 +64,13 @@ class InMemory():
 
         """
         returndata = ()
-        if self.inMemoryType == "redis":
-            returndata = self.redisStore.storeDatainRedis(binarydata)
-        else:
-            returndata = output.handleOut('NotSupported', self.inMemoryType)
-
+        try:
+            if self.inMemoryType == "redis":
+                returndata = self.redisStore.storeDatainRedis(binarydata)
+            else:
+                returndata = output.handleOut('NotSupported', self.inMemoryType)
+        except Exception as e:
+            raise e
         return returndata
 
     def removeFromMemory(self, keyname):

@@ -1,6 +1,7 @@
 from ImageStore.py.inmemory.inmemorystore import InMemory
 from ImageStore.py import output as output
 from DataAgent.da_grpc.client.client import GrpcClient
+from Util.exception import DAException
 
 
 class ImageStore():
@@ -17,8 +18,10 @@ class ImageStore():
             operations get's handled
 
         """
-        self.config = GrpcClient.GetConfigInt("RedisCfg")
-
+        try:
+            self.config = GrpcClient.GetConfigInt("RedisCfg")
+        except Exception as e:
+            raise DAException("Seems to be some issue with gRPC Server. Exception: {0}".format(e))
         # TODO: plan a better approach to set this config later, not to be in
         # DataAgent.conf file as it's not intended to
         # be known to user
@@ -106,14 +109,17 @@ class ImageStore():
 
         """
         returndata = ()
-        if self.memoryType is not None:
-            if self.memoryType == 'inmemory':
-                returndata = self.inmemoryredis.storeDatainMemory(binarydata)
+        try:
+            if self.memoryType is not None:
+                if self.memoryType == 'inmemory':
+                    returndata = self.inmemoryredis.storeDatainMemory(binarydata)
+                else:
+                    returndata = output.handleOut('NotSupported', self.memoryType)
             else:
-                returndata = output.handleOut('NotSupported', self.memoryType)
-        else:
-            returndata = output.handleOut('error', 'Please use \
-                        setStorageType() api before using store operations')
+                returndata = output.handleOut('error', 'Please use \
+                            setStorageType() api before using store operations')
+        except Exception as e:
+            raise DAException("Seems to be some issue with Redis. Exception: {0}".format(e))
         return returndata
 
     def remove(self, keyname):
@@ -124,10 +130,12 @@ class ImageStore():
 
         """
         returndata = ()
-
-        if 'inmem' in keyname:
-            self._initializeinMemory()
-            returndata = self.inmemoryredis.removeFromMemory(keyname)
-        else:
-            returndata = output.handleOut('NotSupported', self.memoryType)
+        try:
+            if 'inmem' in keyname:
+                self._initializeinMemory()
+                returndata = self.inmemoryredis.removeFromMemory(keyname)
+            else:
+                returndata = output.handleOut('NotSupported', self.memoryType)
+        except Exception as e:
+            raise e
         return returndata
