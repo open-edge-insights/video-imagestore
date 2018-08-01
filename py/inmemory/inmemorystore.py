@@ -21,69 +21,67 @@ class InMemory():
             will be handled
 
         """
-        self.inMemoryType = config["InMemory"].lower()
-        if self.inMemoryType == "redis":
-            self.redisStore = RedisConnect(config)
-        else:
-            print(output.handleOut('NotSupported', self.inMemoryType))
+        try:
+            self.inMemoryType = config["InMemory"].lower()
+            if self.inMemoryType == "redis":
+                self.redisStore = RedisConnect(config)
+            else:
+                raise Exception(output.handleOut('NotSupported',
+                                                  self.inMemoryType))
+        except Exception as e:
+            raise e
 
-    def getKeyListInMemory(self):
+    def getKeyList(self):
         """
             Get's the keys list from inmemory storage. This has no
             attributes based on the Instantiated storage it will get from
             corresponding storage stored keys.
 
         """
-        returndata = ()
-        if self.inMemoryType == "redis":
-            returndata = self.redisStore.getKeyListfromRedis()
-        else:
-            returndata = output.handleOut('NotSupported', self.inMemoryType)
-
+        returndata = None
+        try:
+            returndata = self.redisStore.getKeyList()
+        except Exception as e:
+            raise e
         return returndata
 
-    def getDataFromMemory(self, keyname):
+    def read(self, keyname):
         """
             retrieve's the stored data from inmemory based on the key passed
             as attribute to this method.
 
         """
-        returndata = ()
-        if self.inMemoryType == "redis":
-            returndata = self.redisStore.getDataFromRedis(keyname)
-        else:
-            returndata = output.handleOut('NotSupported', self.inMemoryType)
-
+        returndata = None
+        try:
+            returndata = self.redisStore.read(keyname)
+        except Exception as e:
+            raise e
         return returndata
 
-    def storeDatainMemory(self, binarydata):
+    def store(self, binarydata):
         """
             Stores data inMemory. This Accepts binarydata as it's argument.
             Based on the Instantiated storage it's store the binarydata and
             return the key
 
         """
-        returndata = ()
+        returndata = None
         try:
-            if self.inMemoryType == "redis":
-                returndata = self.redisStore.storeDatainRedis(binarydata)
-            else:
-                returndata = output.handleOut('NotSupported', self.inMemoryType)
+            returndata = self.redisStore.store(binarydata)
         except Exception as e:
             raise e
         return returndata
 
-    def removeFromMemory(self, keyname):
+    def remove(self, keyname):
         """
             Removes data from inmemory based on keyname. It Accepts
             keyname as argument. Based on the Instantiated storage. It
             removes key from corresponding storage.
 
         """
-        returndata = ()
-        if self.inMemoryType == "redis":
-            returndata = self.redisStore.removeFromRedis(keyname)
-        else:
-            returndata = output.handleOut('NotSupported', self.inMemoryType)
-
+        returndata = None
+        try:
+            returndata = self.redisStore.remove(keyname)
+        except Exception as e:
+            raise e
         return returndata

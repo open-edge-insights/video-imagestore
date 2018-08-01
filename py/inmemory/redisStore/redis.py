@@ -1,6 +1,7 @@
 import redis
 import uuid
 from pytimeparse.timeparse import timeparse
+from Util.exception import DAException
 
 
 class RedisConnect:
@@ -14,76 +15,71 @@ class RedisConnect:
             raise DAException("Seems to be some issue with Redis. Exception: {0}".format(e))
         self.retention = timeparse(config["Retention"])
 
-    def getDataFromRedis(self, keyname):
+    def read(self, keyname):
         """
             Base implementation to get the data from redis
         """
-        returndata = ()
+        returndata = None
         try:
-            if self.isKeyExistsinRedis(keyname)[1]:
-                returndata = True, self.redis_db.get(keyname)
-            else:
-                returndata = False, 'This is key is not in inmemory (redis)'
+            if self.isKeyExists(keyname):
+                returndata = self.redis_db.get(keyname)
         except Exception as e:
             raise e
         return returndata
 
-    def getKeyListfromRedis(self):
+    def getKeyList(self):
         """
             Base implementation to read the data from redis
         """
-        returndata = ()
         try:
-            fileslist = True, self.redis_db.keys()
+            fileslist = self.redis_db.keys()
         except Exception as e:
             raise e
-        return returndata
+        return fileslist
 
-    def isKeyExistsinRedis(self, keyname):
+    def isKeyExists(self, keyname):
         """
             Base implementation to check key exists or not
         """
-        status = ()
+        status = False
         try:
-            status = True, self.redis_db.exists(keyname)
+            status = self.redis_db.exists(keyname)
         except Exception as e:
             raise e
         return status
 
-    def removeFromRedis(self, keyname):
+    def remove(self, keyname):
         """
             Base implementation to remove data from redis
 
         """
-        returndata = ()
+        returndata = False
         try:
-            if self.isKeyExistsinRedis(keyname)[1]:
+            if self.isKeyExists(keyname):
                 if self.redis_db.delete(keyname) == 1:
-                    returndata = True, 'Removed Succesfully'
-                else:
-                    returndata = False, 'Not Removed'
-            else:
-                returndata = False, 'This is key is not in inmemory (redis)'
+                    returndata = True
         except Exception as e:
             raise e
         return returndata
 
-    def generateRedisKey(self):
+    def generateKey(self):
         """
             This generates key to store data in redis
         """
-        keyname = 'inmem_' + str(uuid.uuid1())[:8]
-
+        try:
+            keyname = 'inmem_' + str(uuid.uuid1())[:8]
+        except Exception as e:
+            raise e
         return keyname
 
-    def storeDatainRedis(self, binarydata):
+    def store(self, binarydata):
         """
             Base Implementation to store data in redis
         """
-        keyname = self.generateRedisKey()
-        returndata = ()
+        keyname = self.generateKey()
+        returndata = None
         try:
-            if(not self.isKeyExistsinRedis(keyname)[1]):
+            if(self.isKeyExists(keyname) == False):
                 if self.retention:
                     store = self.redis_db.set(keyname,
                                             binarydata,
@@ -91,10 +87,7 @@ class RedisConnect:
                 else:
                     store = self.redis_db.set(keyname, binarydata)
 
-                returndata = True, keyname
-            else:
-                returndata = False, 'Already Key exists'
+                returndata = keyname
         except Exception as e:
             raise e
-
         return returndata
