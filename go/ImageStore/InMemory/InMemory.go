@@ -3,73 +3,52 @@ package InMemory
 import (
 	"errors"
 	"iapoc_elephanttrunkarch/ImageStore/go/ImageStore/InMemory/redis"
+
+	"github.com/golang/glog"
 )
 
 // InMemory : This struct is used to comprise all Inmemory methods in it's scope
 type InMemory struct {
-	InMemoryType string
+	memType string
+	redisConnect *(redis.RedisConnect) //TODO: This should actually be an interface referring to respective concrete classes
 }
 
 // memoryDB : This should be used for Module Level Check with Memory Type
 const memoryDB string = "redis"
 
-// Global Declaration
-var redisConnect *(redis.RedisConnect)
-
 // NewInmemory : This method used to initialize the connection based on dataAgent settings
 func NewInmemory(config map[string]string) (*InMemory, error) {
-
-	// status, message := false, "FAILED"
-	var err error
-	err = nil
 	inMemoryType := config["InMemory"]
 	if memoryDB == inMemoryType {
-		redisConnect, err = redis.NewRedisConnect(config)
+		redisConnect, err := redis.NewRedisConnect(config)
 
 		if err != nil {
+			glog.Errorf("Redis connect failed, %v", err)
 			return nil, err
+		} else {
+			glog.Infof("redis connect success: %v", redisConnect)
 		}
-		return &InMemory{InMemoryType: inMemoryType}, nil
+		return &InMemory{memType: inMemoryType, redisConnect: redisConnect}, nil
 	} else {
-		err = errors.New("Currently System Not Supports ")
+		msg := "Currently the memory type: " + inMemoryType + " is not supported" 
+		glog.Errorf(msg)
+		err := errors.New(msg)
 		return nil, err
 	}
 
 }
 
-// GetDataFromInmemory : This helps to read the data from InMemory, It Accepts keyname as input
-func (pInMemory *InMemory) GetDataFromInmemory(keyname string) (bool, string) {
-	status, message := false, "FAILED"
-	if pInMemory.InMemoryType == memoryDB {
-		status, message = redisConnect.GetDataFromRedis(keyname)
-	} else {
-		status, message = false, "FAILED"
-	}
-
-	return status, message
+// Read : This helps to read the data from InMemory, It Accepts keyname as input
+func (pInMemory *InMemory) Read(keyname string) (string, error) {
+	return pInMemory.redisConnect.Read(keyname)
 }
 
-// RemoveDataFromInmemory : This helps to Remove the data from InMemory, It Accepts keyname as input
-func (pInMemory *InMemory) RemoveDataFromInmemory(keyname string) (bool, string) {
-	status, message := false, "FAILED"
-	if pInMemory.InMemoryType == memoryDB {
-		status, message = redisConnect.RemoveFromRedis(keyname)
-	} else {
-		status, message = false, "FAILED  fdfd"
-	}
-
-	return status, message
+// Remove : This helps to Remove the data from InMemory, It Accepts keyname as input
+func (pInMemory *InMemory) Remove(keyname string) error {
+	return pInMemory.redisConnect.Remove(keyname)
 }
 
-// StoreDatainInmemory : This helps to store the data in InMemory, It Accepts value as input
-func (pInMemory *InMemory) StoreDatainInmemory(value []byte) (bool, string) {
-	status, message := false, "FAILED"
-
-	if pInMemory.InMemoryType == memoryDB {
-		status, message = redisConnect.StoreDatainRedis(value)
-	} else {
-		status, message = false, "FAILED"
-	}
-
-	return status, message
+// Store : This helps to store the data in InMemory, It Accepts value as input
+func (pInMemory *InMemory) Store(value []byte) (string, error) {
+	return pInMemory.redisConnect.Store(value)
 }

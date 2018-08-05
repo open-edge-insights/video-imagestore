@@ -2,7 +2,7 @@ package redis
 
 import (
 	"time"
-
+	"errors"
 	"github.com/go-redis/redis"
 	uuid "github.com/google/uuid"
 )
@@ -11,7 +11,7 @@ var client *redis.Client
 
 // RedisConnect : This Struct used to have default variables used for redis. Also to comprise methods of redis to it's scope
 type RedisConnect struct {
-	Retention string
+	retention string
 }
 
 // NewRedisConnect : This is a constructor function to connect redis database
@@ -22,44 +22,28 @@ func NewRedisConnect(config map[string]string) (*RedisConnect, error) {
 		Password: "",
 		DB:       0,
 	})
-
 	_, err := client.Ping().Result()
-
-	return &RedisConnect{Retention: config["Retention"]}, err
+	return &RedisConnect{retention: config["Retention"]}, err
 }
 
-// GetDataFromRedis : This helps to read the data from Redis, It Accepts keyname as input
-func (pRedisConnect *RedisConnect) GetDataFromRedis(keyname string) (bool, string) {
-
-	status, message := false, "FAILED"
-
+// Read : This helps to read the data from Redis, It Accepts keyname as input
+func (pRedisConnect *RedisConnect) Read(keyname string) (string, error) {
 	binarydata, err := client.Get(keyname).Result()
 	if err == redis.Nil {
-		status, message = false, "Key Not Found"
+		return "", errors.New("Key Not Found")
 	} else if err != nil {
-		status, message = false, err.Error()
-	} else {
-		status, message = true, binarydata
+		return "", err
 	}
-
-	return status, message
+	return binarydata, err
 }
 
-// RemoveFromRedis : This helps to remove the data from Redis, It Accepts keyname as input
-func (pRedisConnect *RedisConnect) RemoveFromRedis(keyname string) (bool, string) {
-
-	status, message := false, "FAILED"
-
-	removecode, err := client.Del(keyname).Result()
-	if removecode == 1 {
-		status, message = true, "Return Code : "+string(removecode)
-	} else if removecode == 0 {
-		status, message = false, "Not Removed , Key Not Found"
-	} else if err != nil {
-		status, message = false, err.Error()
-	}
-
-	return status, message
+// Remove : This helps to remove the data from Redis, It Accepts keyname as input
+func (pRedisConnect *RedisConnect) Remove(keyname string) error {
+	_, err := client.Del(keyname).Result()
+	if err != nil {
+		return err
+	} 
+	return nil
 }
 
 // generateKeyName : This used to generate the keyname
@@ -68,14 +52,12 @@ func (pRedisConnect *RedisConnect) generateKeyName() string {
 	return keyname
 }
 
-// StoreDatainRedis : This helps to store the data in redis, It Accepts value as input
-func (pRedisConnect *RedisConnect) StoreDatainRedis(value []byte) (bool, string) {
-	var err error
-	status, message := false, "FAILED"
-
-	ttl, err := time.ParseDuration(pRedisConnect.Retention)
+// Store : This helps to store the data in redis, It Accepts value as input
+func (pRedisConnect *RedisConnect) Store(value []byte) (string, error) {
+	
+	ttl, err := time.ParseDuration(pRedisConnect.retention)
 	if err != nil {
-		status, message = false, err.Error()
+		return "", err
 
 	} else {
 		keyname := pRedisConnect.generateKeyName()
@@ -87,11 +69,9 @@ func (pRedisConnect *RedisConnect) StoreDatainRedis(value []byte) (bool, string)
 		}
 
 		if err != nil {
-			status, message = false, err.Error()
+			return "", err
 		} else {
-			status, message = true, keyname
+			return keyname, nil
 		}
 	}
-
-	return status, message
 }
