@@ -19,7 +19,8 @@ class ImageStore():
 
         """
         try:
-            self.config = GrpcClient.GetConfigInt("RedisCfg")
+            client = GrpcClient()
+            self.config = client.GetConfigInt("RedisCfg")
             self.config["InMemory"] = "redis"
             self._initializeinMemory()
         except Exception as e:

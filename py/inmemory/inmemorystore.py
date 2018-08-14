@@ -1,5 +1,4 @@
 from ImageStore.py.inmemory.redisStore.redis import RedisConnect
-from DataAgent.da_grpc.client.client import GrpcClient
 from ImageStore.py import output as output
 
 

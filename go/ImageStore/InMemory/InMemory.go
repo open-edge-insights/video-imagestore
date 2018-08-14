@@ -9,7 +9,7 @@ import (
 
 // InMemory : This struct is used to comprise all Inmemory methods in it's scope
 type InMemory struct {
-	memType string
+	memType      string
 	redisConnect *(redis.RedisConnect) //TODO: This should actually be an interface referring to respective concrete classes
 }
 
@@ -25,12 +25,10 @@ func NewInmemory(config map[string]string) (*InMemory, error) {
 		if err != nil {
 			glog.Errorf("Redis connect failed, %v", err)
 			return nil, err
-		} else {
-			glog.Infof("redis connect success: %v", redisConnect)
 		}
 		return &InMemory{memType: inMemoryType, redisConnect: redisConnect}, nil
 	} else {
-		msg := "Currently the memory type: " + inMemoryType + " is not supported" 
+		msg := "Currently the memory type: " + inMemoryType + " is not supported"
 		glog.Errorf(msg)
 		err := errors.New(msg)
 		return nil, err

@@ -22,7 +22,8 @@ type ImageStore struct {
 func NewImageStore() (*ImageStore, error) {
 
 	//TODO: This call is failing when trying to connect to gRPC server running in the same container.
-	config, err := client.GetConfigInt("RedisCfg")
+	grpcClient, err := client.NewGrpcClient("localhost", "50051")
+	config, err := grpcClient.GetConfigInt("RedisCfg")
 
 	if err != nil {
 		glog.Errorf("GetConfigInt() Error:%v", err)
