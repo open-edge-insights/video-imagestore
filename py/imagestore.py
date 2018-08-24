@@ -1,11 +1,23 @@
 """
 Copyright (c) 2018 Intel Corporation.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 """
 
 from ImageStore.py.inmemory.inmemorystore import InMemory
@@ -34,7 +46,8 @@ class ImageStore():
             self.config["InMemory"] = "redis"
             self._initializeinMemory()
         except Exception as e:
-            raise DAException("Seems to be some issue with gRPC Server. Exception: {0}".format(e))
+            raise DAException("Seems to be some issue with gRPC Server. \
+                Exception: {0}".format(e))
         # TODO: plan a better approach to set this config later, not to be in
         # DataAgent.conf file as it's not intended to
         # be known to user
@@ -63,8 +76,8 @@ class ImageStore():
             if memoryType == 'inmemory':
                 self.memoryType = memoryType
             else:
-                raise Exception(output.handleOut('NotSupported',
-                                                  self.memoryType))
+                raise Exception(output.handleOut(
+                                    'NotSupported', self.memoryType))
         else:
             raise Exception(output.handleOut('NotSupported',
                                              memoryType))
@@ -129,12 +142,14 @@ class ImageStore():
                 if self.memoryType == 'inmemory':
                     returndata = self.inmemoryredis.store(binarydata)
                 else:
-                    returndata = output.handleOut('NotSupported', self.memoryType)
+                    returndata = output.handleOut(
+                                    'NotSupported', self.memoryType)
             else:
                 returndata = output.handleOut('error', 'Please use \
-                            setStorageType() api before using store operations')
+                            setStorageType() API before using store() API')
         except Exception as e:
-            raise DAException("Seems to be some issue with Redis. Exception: {0}".format(e))
+            raise DAException("Seems to be some issue with Redis. \
+                            Exception: {0}".format(e))
         return returndata
 
     def remove(self, keyname):
