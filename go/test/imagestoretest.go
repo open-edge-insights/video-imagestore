@@ -10,7 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package main
 
 import (
-	imagestore "iapoc_elephanttrunkarch/ImageStore/go/ImageStore"
+	imagestore "ElephantTrunkArch/ImageStore/go/ImageStore"
 	"os"
 	"flag"
 	"github.com/golang/glog"

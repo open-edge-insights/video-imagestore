@@ -12,8 +12,8 @@ package ImageStore
 
 import (
 	"errors"
-	client "iapoc_elephanttrunkarch/DataAgent/da_grpc/client"
-	inmemory "iapoc_elephanttrunkarch/ImageStore/go/ImageStore/InMemory"
+	client "ElephantTrunkArch/DataAgent/da_grpc/client"
+	inmemory "ElephantTrunkArch/ImageStore/go/ImageStore/InMemory"
 	"strings"
 
 	"github.com/golang/glog"

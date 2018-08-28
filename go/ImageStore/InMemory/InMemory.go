@@ -11,7 +11,7 @@ package InMemory
 
 import (
 	"errors"
-	"iapoc_elephanttrunkarch/ImageStore/go/ImageStore/InMemory/redis"
+	"ElephantTrunkArch/ImageStore/go/ImageStore/InMemory/redis"
 
 	"github.com/golang/glog"
 )
