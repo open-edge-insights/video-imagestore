@@ -22,7 +22,7 @@ SOFTWARE.
 
 from ImageStore.py.inmemory.inmemorystore import InMemory
 from ImageStore.py import output as output
-from DataAgent.da_grpc.client.client import GrpcClient
+from DataAgent.da_grpc.client.py.client import GrpcClient
 from Util.exception import DAException
 
 
