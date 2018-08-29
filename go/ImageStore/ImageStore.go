@@ -11,9 +11,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package ImageStore
 
 import (
-	client "ElephantTrunkArch/DataAgent/da_grpc/client/go"
-	inmemory "ElephantTrunkArch/ImageStore/go/ImageStore/InMemory"
 	"errors"
+	client "ElephantTrunkArch/DataAgent/da_grpc/client"
+	inmemory "ElephantTrunkArch/ImageStore/go/ImageStore/InMemory"
 	"strings"
 
 	"github.com/golang/glog"
