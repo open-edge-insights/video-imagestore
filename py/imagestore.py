@@ -22,7 +22,7 @@ SOFTWARE.
 
 from ImageStore.py.inmemory.inmemorystore import InMemory
 from ImageStore.py import output as output
-from DataAgent.da_grpc.client.py.client import GrpcClient
+from DataAgent.da_grpc.client.py.client_internal.client import GrpcInternalClient
 from Util.exception import DAException
 
 
@@ -41,7 +41,7 @@ class ImageStore():
 
         """
         try:
-            client = GrpcClient()
+            client = GrpcInternalClient()
             self.config = client.GetConfigInt("RedisCfg")
             self.config["InMemory"] = "redis"
             self._initializeinMemory()

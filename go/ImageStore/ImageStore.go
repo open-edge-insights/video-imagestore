@@ -11,7 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package ImageStore
 
 import (
-	client "ElephantTrunkArch/DataAgent/da_grpc/client/go"
+	client "ElephantTrunkArch/DataAgent/da_grpc/client/go/client_internal"
 	inmemory "ElephantTrunkArch/ImageStore/go/ImageStore/InMemory"
 	"errors"
 	"strings"
@@ -32,7 +32,7 @@ type ImageStore struct {
 func NewImageStore() (*ImageStore, error) {
 
 	//TODO: This call is failing when trying to connect to gRPC server running in the same container.
-	grpcClient, err := client.NewGrpcClient("localhost", "50051")
+	grpcClient, err := client.NewGrpcClient("localhost", "50052")
 	config, err := grpcClient.GetConfigInt("RedisCfg")
 
 	if err != nil {
