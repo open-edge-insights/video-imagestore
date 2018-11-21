@@ -33,7 +33,8 @@ class RedisConnect:
         try:
             self.redis_db = redis.StrictRedis(host=config["Host"],
                                               port=config["Port"],
-                                              db=0)
+                                              db=0,
+                                              password=config["Password"])
         except Exception as e:
             raise DAException("Seems to be some issue with Redis." +
                               " Exception: {0}".format(e))

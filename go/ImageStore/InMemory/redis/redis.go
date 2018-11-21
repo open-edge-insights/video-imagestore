@@ -10,8 +10,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package redis
 
 import (
-	"time"
 	"errors"
+	"time"
+
 	"github.com/go-redis/redis"
 	uuid "github.com/google/uuid"
 )
@@ -28,7 +29,7 @@ func NewRedisConnect(config map[string]string) (*RedisConnect, error) {
 
 	client = redis.NewClient(&redis.Options{
 		Addr:     config["Host"] + ":" + config["Port"],
-		Password: "",
+		Password: config["Password"],
 		DB:       0,
 	})
 	_, err := client.Ping().Result()
@@ -51,7 +52,7 @@ func (pRedisConnect *RedisConnect) Remove(keyname string) error {
 	_, err := client.Del(keyname).Result()
 	if err != nil {
 		return err
-	} 
+	}
 	return nil
 }
 
@@ -63,7 +64,7 @@ func (pRedisConnect *RedisConnect) generateKeyName() string {
 
 // Store : This helps to store the data in redis, It Accepts value as input
 func (pRedisConnect *RedisConnect) Store(value []byte) (string, error) {
-	
+
 	ttl, err := time.ParseDuration(pRedisConnect.retention)
 	if err != nil {
 		return "", err
