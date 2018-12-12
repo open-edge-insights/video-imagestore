@@ -21,6 +21,7 @@ SOFTWARE.
 """
 
 from ImageStore.py.inmemory.inmemorystore import InMemory
+from ImageStore.py.persistent import PersistentImageStore, get_config_key
 from ImageStore.py import output as output
 from DataAgent.da_grpc.client.py.client_internal.client import GrpcInternalClient
 from Util.exception import DAException
@@ -44,6 +45,11 @@ class ImageStore():
             client = GrpcInternalClient()
             self.config = client.GetConfigInt("RedisCfg")
             self.config["InMemory"] = "redis"
+
+            self.persistent_config = client.GetConfigInt("PersistentImageStore")
+            storage_type = get_config_key(self.persistent_config['Type'])
+            self.persis_storage_config = client.GetConfigInt(storage_type)
+
             self._initializeinMemory()
         except Exception as e:
             raise DAException("Seems to be some issue with gRPC Server. \
@@ -62,6 +68,8 @@ class ImageStore():
         # policy = self.config.retentionpolicy
         try:
             self.inmemoryredis = InMemory(self.config)
+            self.persistent = PersistentImageStore(
+                    self.persistent_config['Type'], self.persis_storage_config)
         except Exception as e:
             raise e
 
@@ -74,6 +82,8 @@ class ImageStore():
         if memoryType is not None:
             memoryType = memoryType.lower()
             if memoryType == 'inmemory':
+                self.memoryType = memoryType
+            elif memoryType == 'persistent':
                 self.memoryType = memoryType
             else:
                 raise Exception(output.handleOut(
@@ -97,6 +107,8 @@ class ImageStore():
         try:
             if self.memoryType == 'inmemory':
                 returndata = self.inmemoryredis.getKeyList()
+            elif self.memoryType == 'persistent':
+                returndata = self.persistent.getKeyList()
             else:
                 returndata = output.handleOut('NotSupported', self.memoryType)
         except Exception as e:
@@ -119,6 +131,8 @@ class ImageStore():
         try:
             if 'inmem' in keyname:
                 returndata = self.inmemoryredis.read(keyname)
+            elif 'persist' in keyname:
+                returndata = self.persistent.read(keyname)
             else:
                 returndata = output.handleOut('NotSupported', 'keyname is not having any\
                                                 inMemory key pattern')
@@ -141,6 +155,8 @@ class ImageStore():
             if self.memoryType is not None:
                 if self.memoryType == 'inmemory':
                     returndata = self.inmemoryredis.store(binarydata)
+                elif self.memoryType == 'persistent':
+                    returndata = self.persistent.store(binarydata)
                 else:
                     returndata = output.handleOut(
                                     'NotSupported', self.memoryType)
@@ -163,8 +179,11 @@ class ImageStore():
         try:
             if 'inmem' in keyname:
                 returndata = self.inmemoryredis.remove(keyname)
+            elif 'persist' in keyname:
+                returndata = self.persistent.remove(keyname)
             else:
                 returndata = output.handleOut('NotSupported', self.memoryType)
         except Exception as e:
             raise e
         return returndata
+
