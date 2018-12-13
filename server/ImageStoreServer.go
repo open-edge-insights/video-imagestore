@@ -16,14 +16,16 @@ import (
 	pb "ElephantTrunkArch/ImageStore/protobuff/go"
 	"crypto/tls"
 	"crypto/x509"
+	b64 "encoding/base64"
 	"flag"
 	"io"
-	"io/ioutil"
+	"path/filepath"
 
 	"context"
 	"net"
 	"os"
 
+	client "ElephantTrunkArch/DataAgent/da_grpc/client/go/client_internal"
 	imagestore "ElephantTrunkArch/ImageStore/go/ImageStore"
 	util "ElephantTrunkArch/Util"
 
@@ -42,12 +44,15 @@ const (
 // Server Certificates
 const (
 	RootCA     = "/etc/ssl/grpc_int_ssl_secrets/ca_certificate.pem"
-	ServerCert = "/etc/ssl/imagestore/imagestore_server_certificate.pem"
-	ServerKey  = "/etc/ssl/imagestore/imagestore_server_key.pem"
+	ServerCert = "imagestore_server_certificate.pem"
+	ServerKey  = "imagestore_server_key.pem"
+
+	ClientCert = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_certificate.pem"
+	ClientKey  = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_key.pem"
 )
 
 // IsServer is used to implement ImageStore.IsServer
-type IsServer struct{
+type IsServer struct {
 	is *imagestore.ImageStore
 }
 
@@ -75,21 +80,34 @@ func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string
 	minioConfigMap["Host"] = "localhost"
 	redisConfigMap["Host"] = "localhost"
 
-	// Read certificate binary
-	certPEMBlock, err := ioutil.ReadFile(ServerCert)
+	grpcClient, err := client.NewGrpcInternalClient(ClientCert, ClientKey, RootCA, "ia_data_agent", "50052")
 	if err != nil {
-		glog.Errorf("Failed to Read Server Certificate : %s", err)
+		glog.Errorf("Error while obtaining GrpcClient object...")
 		os.Exit(-1)
 	}
 
-	keyPEMBlock, err := ioutil.ReadFile(ServerKey)
+	data, err := grpcClient.GetConfigInt("ImgStoreServerCert")
 	if err != nil {
+		glog.Errorf("Unable to read SERVER certificate from DataAgent %s", err)
+	}
+
+	// Read certificate binary
+	certPEMBlock, certValid := data[ServerCert]
+	if !certValid {
+		glog.Errorf("Failed to Read Server Certificate")
+		os.Exit(-1)
+	}
+
+	keyPEMBlock, keyValid := data[ServerKey]
+	if !keyValid {
 		glog.Errorf("Failed to Read Server Key : %s", err)
 		os.Exit(-1)
 	}
 
 	// Load the certificates from binary
-	certificate, err := tls.X509KeyPair(certPEMBlock, keyPEMBlock)
+	keyPEMBlockByte, _ := b64.StdEncoding.DecodeString(keyPEMBlock)
+	certPEMBlockByte, _ := b64.StdEncoding.DecodeString(certPEMBlock)
+	certificate, err := tls.X509KeyPair(certPEMBlockByte, keyPEMBlockByte)
 	if err != nil {
 		glog.Errorf("Failed to Load ServerKey Pair : %s", err)
 		os.Exit(-1)
@@ -97,14 +115,15 @@ func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string
 
 	// Create a certificate pool from the certificate authority
 	certPool := x509.NewCertPool()
-	ca, err := ioutil.ReadFile(RootCA)
-	if err != nil {
-		glog.Errorf("Failed to Read CA Certificate : %s", err)
+	ca, caValid := data[filepath.Base(RootCA)]
+	if !caValid {
+		glog.Errorf("Failed to Read CA Certificate")
 		os.Exit(-1)
 	}
 
 	// Append the certificates from the CA
-	if ok := certPool.AppendCertsFromPEM(ca); !ok {
+	caByte, _ := b64.StdEncoding.DecodeString(ca)
+	if ok := certPool.AppendCertsFromPEM(caByte); !ok {
 		glog.Errorf("Failed to Append CA Certificate")
 		os.Exit(-1)
 	}
@@ -124,7 +143,7 @@ func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string
 
 	//Create the gRPC server
 	s := grpc.NewServer(grpc.Creds(creds))
-	
+
 	glog.Infof("Waiting for redis port to be up...")
 	// Wait until Redis port is up
 	redisPort := os.Getenv("REDIS_PORT")
