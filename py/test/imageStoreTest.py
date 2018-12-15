@@ -40,7 +40,7 @@ try:
     outputFile = args.output_file
     storeInMem = ImageStore()
     storeInMem.setStorageType('inmemory')
-    keyname = storeInMem.store("Value")
+    keyname = storeInMem.store(bytes(0x00))
     print("Return of Store Operation Keyname : ", keyname)
     print("Reading the Stored Data", storeInMem.read(keyname))  # binaryvalue
     print("Removing the Stored data", storeInMem.remove(keyname))  # status
