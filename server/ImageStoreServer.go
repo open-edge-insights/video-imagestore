@@ -13,12 +13,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package server
 
 import (
-	config "ElephantTrunkArch/DataAgent/config"
 	pb "ElephantTrunkArch/ImageStore/protobuff/go"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/json"
-	"errors"
 	"flag"
 	"io"
 	"io/ioutil"
@@ -49,18 +46,14 @@ const (
 	ServerKey  = "Certificates/imagestore/imagestore_server_key.pem"
 )
 
-// ImgDaCfg stores parsed DataAgent config
-var ImgDaCfg config.DAConfig
-
 // IsServer is used to implement ImageStore.IsServer
 type IsServer struct{
 	is *imagestore.ImageStore
 }
 
 // StartGrpcServer starts the ImageStore grpc server
-func StartGrpcServer(IsCfg config.DAConfig) {
+func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string]string) {
 
-	ImgDaCfg = IsCfg
 	ipAddr, err := net.LookupIP("ia_imagestore")
 	if err != nil {
 		glog.Errorf("Failed to fetch the IP address for host: %v, error:%v", ipAddr, err)
@@ -78,31 +71,9 @@ func StartGrpcServer(IsCfg config.DAConfig) {
 	}
 	addr := gRPCImageStoreHost + ":" + gRPCImageStorePort
 
-
-	jsonStr, err := getConfig("RedisCfg")
-	if err != nil {
-		glog.Errorf("getConfig(\"RedisCfg\") method failed. Error: %v", err)
-		os.Exit(-1)
-	}
-
-	var configMap map[string]string
-	configBytes := []byte(jsonStr)
-	json.Unmarshal(configBytes, &configMap)
-
-	minioJsonStr, err := getConfig("MinioCfg")
-	if err != nil {
-		glog.Errorf("Failed to retrieve minio config: %v", err)
-		os.Exit(-1)
-	}
-
-	var minioConfigMap map[string]string
-	minioConfigBytes := []byte(minioJsonStr)
-	json.Unmarshal(minioConfigBytes, &minioConfigMap)
-
-	glog.Infof("Minio cfg in read: %+v", minioConfigMap)
-
 	// Manually set the host to localhost since we are inside the docker network
 	minioConfigMap["Host"] = "localhost"
+	redisConfigMap["Host"] = "localhost"
 
 	// Read certificate binary
 	certPEMBlock, err := ioutil.ReadFile(ServerCert)
@@ -153,10 +124,32 @@ func StartGrpcServer(IsCfg config.DAConfig) {
 
 	//Create the gRPC server
 	s := grpc.NewServer(grpc.Creds(creds))
+	
+	// Wait until Redis port is up
+	for {
+		redisConn, err := net.DialTimeout("tcp", net.JoinHostPort("", "6379"), (5 * time.Second))
+		if err != nil {
+			glog.Errorf("Redis not started. Retrying...")
+		}
+		if redisConn != nil {
+			redisConn.Close()
+			break
+		}
+	}
 
-	time.Sleep(1 * time.Second)
+	// Wait until Minio port is up
+	for {
+		minioConn, err := net.DialTimeout("tcp", net.JoinHostPort("", "9000"), (5 * time.Second))
+		if err != nil {
+			glog.Errorf("Minio not started. Retrying...")
+		}
+		if minioConn != nil {
+			minioConn.Close()
+			break
+		}
+	}
 
-	imgStore, err := imagestore.GetImageStoreInstance(configMap, minioConfigMap)
+	imgStore, err := imagestore.GetImageStoreInstance(redisConfigMap, minioConfigMap)
 	if err != nil {
 		glog.Errorf("Failed to instantiate GetImageStoreInstance(). Error: %v", err)
 		os.Exit(-1)
@@ -239,24 +232,4 @@ func (s *IsServer) Remove(ctx context.Context, in *pb.RemoveReq) (*pb.RemoveResp
 // CloseGrpcServer closes gRPC server
 func CloseGrpcServer(done chan bool) {
 	done <- true
-}
-
-func getConfig(cfgType string) (string, error) {
-
-	var buf []byte
-	var err error
-	err = nil
-
-	switch cfgType {
-	case "InfluxDBCfg":
-		buf, err = json.Marshal(ImgDaCfg.InfluxDB)
-	case "RedisCfg":
-		buf, err = json.Marshal(ImgDaCfg.Redis)
-	case "MinioCfg":
-		buf, err = json.Marshal(ImgDaCfg.Minio)
-	default:
-		return "", errors.New("Not a valid config type")
-	}
-
-	return string(buf), err
 }

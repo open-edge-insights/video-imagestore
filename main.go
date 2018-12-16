@@ -13,9 +13,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package main
 
 import (
-	config "ElephantTrunkArch/DataAgent/config"
 	client "ElephantTrunkArch/DataAgent/da_grpc/client/go/client_internal"
-
 	server "ElephantTrunkArch/ImageStore/server"
 	"os"
 
@@ -23,9 +21,6 @@ import (
 
 	"github.com/golang/glog"
 )
-
-// IsCfg - stores parsed DataAgent config
-var IsCfg config.DAConfig
 
 func main() {
 	grpcClient, errr := client.NewGrpcClient("ia_data_agent", "50052")
@@ -40,36 +35,24 @@ func main() {
 		os.Exit(-1)
 	}
 	configMinio := "MinioCfg"
-	respMap, err := grpcClient.GetConfigInt(configMinio)
+	respMapMinio, err := grpcClient.GetConfigInt(configMinio)
 	if err != nil {
 		glog.Errorf("GetConfigInt failed...")
 		os.Exit(-1)
 	}
 
-	IsCfg.Redis.Host = "localhost"
-	IsCfg.Redis.Port = respMapRedis["Port"]
-	IsCfg.Redis.Password = respMapRedis["Password"]
-	IsCfg.Redis.Retention = respMapRedis["Retention"]
-
-	IsCfg.Minio.Host = "localhost"
-	IsCfg.Minio.Port = respMap["Port"]
-	IsCfg.Minio.AccessKey = respMap["AccessKey"]
-	IsCfg.Minio.SecretKey = respMap["SecretKey"]
-	IsCfg.Minio.RetentionTime = respMap["RetentionTime"]
-	IsCfg.Minio.Ssl = respMap["Ssl"]
-
 	glog.Infof("**************STARTING IMAGESTORE GRPC SERVER**************")
 	done := make(chan bool)
-	go StartRedis()
-	go StartMinio()
-	go server.StartGrpcServer(IsCfg)
+	go StartRedis(respMapRedis)
+	go StartMinio(respMapMinio)
+	go server.StartGrpcServer(respMapRedis, respMapMinio)
 	<-done
 	glog.Infof("**************Exiting**************")
 }
 
 // StartRedis starts redis server
-func StartRedis() {
-	cmd := exec.Command("redis-server", "--requirepass", IsCfg.Redis.Password)
+func StartRedis(redisConfigMap map[string]string) {
+	cmd := exec.Command("redis-server", "--requirepass", redisConfigMap["Password"])
 	err := cmd.Run()
 	if err != nil {
 		glog.Errorf("Command failed: %s", err)
@@ -78,9 +61,9 @@ func StartRedis() {
 }
 
 // StartMinio starts minio server
-func StartMinio() {
-	os.Setenv("MINIO_ACCESS_KEY", IsCfg.Minio.AccessKey)
-	os.Setenv("MINIO_SECRET_KEY", IsCfg.Minio.SecretKey)
+func StartMinio(minioConfigMap map[string]string) {
+	os.Setenv("MINIO_ACCESS_KEY", minioConfigMap["AccessKey"])
+	os.Setenv("MINIO_SECRET_KEY", minioConfigMap["SecretKey"])
 	os.Setenv("MINIO_REGION", "gateway")
 	cmd := exec.Command("./minio", "server", "/data")
 	err := cmd.Run()
