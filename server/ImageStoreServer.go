@@ -41,9 +41,9 @@ const (
 
 // Server Certificates
 const (
-	RootCA     = "Certificates/ca/ca_certificate.pem"
-	ServerCert = "Certificates/imagestore/imagestore_server_certificate.pem"
-	ServerKey  = "Certificates/imagestore/imagestore_server_key.pem"
+	RootCA     = "/etc/ssl/grpc_int_ssl_secrets/ca_certificate.pem"
+	ServerCert = "/etc/ssl/imagestore/imagestore_server_certificate.pem"
+	ServerKey  = "/etc/ssl/imagestore/imagestore_server_key.pem"
 )
 
 // IsServer is used to implement ImageStore.IsServer
@@ -125,9 +125,10 @@ func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string
 	//Create the gRPC server
 	s := grpc.NewServer(grpc.Creds(creds))
 	
+	glog.Infof("Waiting for redis port to be up...")
 	// Wait until Redis port is up
 	for {
-		redisConn, err := net.DialTimeout("tcp", net.JoinHostPort("", "6379"), (5 * time.Second))
+		redisConn, err := net.DialTimeout("tcp", net.JoinHostPort("", os.Getenv("REDIS_PORT")), (5 * time.Second))
 		if err != nil {
 			glog.Errorf("Redis not started. Retrying...")
 		}
@@ -137,9 +138,10 @@ func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string
 		}
 	}
 
+	glog.Infof("Waiting for minio port to be up...")
 	// Wait until Minio port is up
 	for {
-		minioConn, err := net.DialTimeout("tcp", net.JoinHostPort("", "9000"), (5 * time.Second))
+		minioConn, err := net.DialTimeout("tcp", net.JoinHostPort("", os.Getenv("MINIO_PORT")), (5 * time.Second))
 		if err != nil {
 			glog.Errorf("Minio not started. Retrying...")
 		}

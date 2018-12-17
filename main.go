@@ -22,8 +22,15 @@ import (
 	"github.com/golang/glog"
 )
 
+// grpc client certificates
+const (
+	RootCA     = "/etc/ssl/grpc_int_ssl_secrets/ca_certificate.pem"
+	ClientCert = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_certificate.pem"
+	ClientKey  = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_key.pem"
+)
+
 func main() {
-	grpcClient, errr := client.NewGrpcClient("ia_data_agent", "50052")
+	grpcClient, errr := client.NewGrpcInternalClient(ClientCert, ClientKey, RootCA, "ia_data_agent", "50052")
 	if errr != nil {
 		glog.Errorf("Error while obtaining GrpcClient object...")
 		os.Exit(-1)
@@ -52,10 +59,11 @@ func main() {
 
 // StartRedis starts redis server
 func StartRedis(redisConfigMap map[string]string) {
-	cmd := exec.Command("redis-server", "--requirepass", redisConfigMap["Password"])
+	redisPort := os.Getenv("REDIS_PORT")
+	cmd := exec.Command("redis-server", "--port", redisPort, "--requirepass", redisConfigMap["Password"])
 	err := cmd.Run()
 	if err != nil {
-		glog.Errorf("Command failed: %s", err)
+		glog.Errorf("Not able to start redis server: %v", err)
 		os.Exit(-1)
 	}
 }
@@ -65,10 +73,14 @@ func StartMinio(minioConfigMap map[string]string) {
 	os.Setenv("MINIO_ACCESS_KEY", minioConfigMap["AccessKey"])
 	os.Setenv("MINIO_SECRET_KEY", minioConfigMap["SecretKey"])
 	os.Setenv("MINIO_REGION", "gateway")
+	minioPort := os.Getenv("MINIO_PORT")
+	glog.Infof("Minio port: %v", minioPort)
+	// TODO: Need to see a way to pass port while bring
+	// as --address switch didn't work as expected
 	cmd := exec.Command("./minio", "server", "/data")
 	err := cmd.Run()
 	if err != nil {
-		glog.Errorf("Command failed: %s", err)
+		glog.Errorf("Not able to start minio server: %v", err)
 		os.Exit(-1)
 	}
 }

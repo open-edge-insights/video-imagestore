@@ -28,36 +28,32 @@ import hashlib
 import time
 import sys
 import os
-path = os.path.abspath(__file__)
-sys.path.append(os.path.join(os.path.dirname(path), "../../client/py"))
-from client import GrpcImageStoreClient
+from ImageStore.client.py.client import \
+    GrpcImageStoreClient
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s : %(levelname)s : \
                     %(name)s : [%(filename)s] :' +
                     '%(funcName)s : in line : [%(lineno)d] : %(message)s')
 log = logging.getLogger("GRPC_TEST")
-import os
-filepath = os.path.abspath(os.path.dirname(__file__))
-CA_CERT = filepath + "/../Certificates/ca/ca_certificate.pem"
-IM_CLIENT_KEY = filepath + "/../Certificates/client/imagestore_client_key.pem"
-IM_CLIENT_CERT = filepath + \
-    "/../Certificates/client/imagestore_client_certificate.pem"
+
+
+CA_CERT = "/etc/ssl/grpc_internal/ca_certificate.pem"
+IM_CLIENT_KEY = "/etc/ssl/imagestore/imagestore_client_key.pem"
+IM_CLIENT_CERT = "/etc/ssl/imagestore/imagestore_client_certificate.pem"
 
 if __name__ == '__main__':
 
-    client = GrpcImageStoreClient(IM_CLIENT_CERT, IM_CLIENT_KEY, CA_CERT, hostname="localhost")
+    client = GrpcImageStoreClient(IM_CLIENT_CERT, IM_CLIENT_KEY, CA_CERT,
+                                  hostname="localhost")
 
     # Testing Read("imgHandle") gRPC call
     keyname = "inmem_335afcab"
     config = client.Read(keyname)
 
     # Testing Store("value") gRPC call
-    keyname = client.Store(bytes(0x00),'inmemory')
+    keyname = client.Store(bytes(0x00), 'inmemory')
     print(keyname)
 
     # Testing Remove("imgHandle") gRPC call
     client.Remove(keyname)
-
-    
-    

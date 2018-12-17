@@ -23,8 +23,14 @@ SOFTWARE.
 from ImageStore.py.inmemory.inmemorystore import InMemory
 from ImageStore.py.persistent import PersistentImageStore, get_config_key
 from ImageStore.py import output as output
-from DataAgent.da_grpc.client.py.client_internal.client import GrpcInternalClient
+from DataAgent.da_grpc.client.py.client_internal.client \
+    import GrpcInternalClient
 from Util.exception import DAException
+
+
+CLIENT_CERT = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_certificate.pem"
+CLIENT_KEY = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_key.pem"
+CA_CERT = "/etc/ssl/grpc_int_ssl_secrets/ca_certificate.pem"
 
 
 class ImageStore():
@@ -42,12 +48,14 @@ class ImageStore():
 
         """
         try:
-            client = GrpcInternalClient()
+            client = GrpcInternalClient(CLIENT_CERT, CLIENT_KEY, CA_CERT)
             self.config = client.GetConfigInt("RedisCfg")
             self.config["InMemory"] = "redis"
 
-            self.persistent_config = client.GetConfigInt("PersistentImageStore")
+            self.persistent_config = \
+                client.GetConfigInt("PersistentImageStore")
             storage_type = get_config_key(self.persistent_config['Type'])
+            print("storage_type: ", storage_type)
             self.persis_storage_config = client.GetConfigInt(storage_type)
 
             self._initializeinMemory()
@@ -186,4 +194,3 @@ class ImageStore():
         except Exception as e:
             raise e
         return returndata
-

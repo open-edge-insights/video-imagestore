@@ -20,9 +20,9 @@ import (
 
 // Client Certificates
 const (
-	RootCA     = "Certificates/ca/ca_certificate.pem"
-	ClientCert = "Certificates/imagestore/imagestore_client_certificate.pem"
-	ClientKey  = "Certificates/imagestore/imagestore_client_key.pem"
+	RootCA     = "/etc/ssl/grpc_internal/ca_certificate.pem"
+	ClientCert = "/etc/ssl/imagestore/imagestore_client_certificate.pem"
+	ClientKey  = "/etc/ssl/imagestore/imagestore_client_key.pem"
 )
 
 func main() {

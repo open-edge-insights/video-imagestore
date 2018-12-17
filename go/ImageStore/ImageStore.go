@@ -33,11 +33,18 @@ type ImageStore struct {
 	persistentStorage *(persistent.Persistent)
 }
 
+// grpc client certificates
+const (
+	RootCA     = "/etc/ssl/grpc_int_ssl_secrets/ca_certificate.pem"
+	ClientCert = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_certificate.pem"
+	ClientKey  = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_key.pem"
+)
+
 // NewImageStore : This is the Constructor type method which initialises the Object for ImageStore Operations
 func NewImageStore() (*ImageStore, error) {
 
 	//TODO: This call is failing when trying to connect to gRPC server running in the same container.
-	grpcClient, err := client.NewGrpcClient("localhost", "50052")
+	grpcClient, err := client.NewGrpcInternalClient(ClientCert, ClientKey, RootCA, "localhost", "50052")
 	if err != nil {
 		glog.Errorf("Error connecting to gRPC: %v", err)
 		return nil, err

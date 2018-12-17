@@ -90,13 +90,13 @@ func initClient(config map[string]string) (*minio.Client, error) {
 		return nil, errors.New(msg)
 	}
 
-	glog.Infof("Config: Host=%s, Port=%d, ssl=%s", host, port, ssl)
+	glog.Infof("Config: Host=%s, Port=%s, ssl=%v", host, port, ssl)
 
 	glog.Infof("Initializing Minio client")
 	client, err := minio.NewWithRegion(
 		host+":"+port, accessKey, secretKey, ssl, region)
 	if err != nil {
-		glog.Errorf("Failed to connect to Minio server: ", err)
+		glog.Errorf("Failed to connect to Minio server: %v", err)
 		return nil, err
 	}
 
@@ -104,7 +104,7 @@ func initClient(config map[string]string) (*minio.Client, error) {
 	glog.Infof("Checking if Minio bucket already exists")
 	found, err := client.BucketExists(bucketName)
 	if err != nil {
-		glog.Errorf("Failed to verify existence of bucket: ", err)
+		glog.Errorf("Failed to verify existence of bucket: %v", err)
 		return nil, err
 	}
 
@@ -195,7 +195,7 @@ func (pMinioStorage *MinioStorage) Read(keyname string) (string, error) {
 	data := bytes.NewBuffer(nil)
 
 	if _, err = io.Copy(data, obj); err != nil {
-		glog.Errorf("Failed to retrieve data from Minio: ", err)
+		glog.Errorf("Failed to retrieve data from Minio: %v", err)
 		return "", err
 	}
 
@@ -215,7 +215,7 @@ func (pMinioStorage *MinioStorage) Store(data []byte) (string, error) {
 	n, err := pMinioStorage.client.PutObject(bucketName, key, buffer,
 		buffLen, minio.PutObjectOptions{})
 	if err != nil {
-		glog.Errorf("Failed to put object into Minio: ", err)
+		glog.Errorf("Failed to put object into Minio: %v", err)
 		return "", err
 	}
 	if n < buffLen {
@@ -242,7 +242,7 @@ func (pMinioStorage *MinioStorage) cleanStore() error {
 
 		for obj := range pMinioStorage.client.ListObjects(bucketName, "", false, nil) {
 			if obj.Err != nil {
-				glog.Errorf("Failed retrieving objects from Minio: ", obj.Err)
+				glog.Errorf("Failed retrieving objects from Minio: %v", obj.Err)
 				objectsErrCh <- obj.Err
 				return
 			}
@@ -256,7 +256,7 @@ func (pMinioStorage *MinioStorage) cleanStore() error {
 	}()
 
 	for rErr := range pMinioStorage.client.RemoveObjects(bucketName, objectsCh) {
-		glog.Errorf("Error removing objects from Minio: ", rErr)
+		glog.Errorf("Error removing objects from Minio: %v", rErr)
 		return errors.New("Failed removing objects from Minio")
 	}
 
@@ -269,7 +269,7 @@ func (pMinioStorage *MinioStorage) cleanStore() error {
 		time.Duration(pMinioStorage.retentionTime), func() {
 			err := pMinioStorage.cleanStore()
 			if err != nil {
-				glog.Errorf("Failed to clear Minio object store: ", err)
+				glog.Errorf("Failed to clear Minio object store: %v", err)
 			}
 		})
 
