@@ -23,9 +23,9 @@ import (
 	"context"
 	"net"
 	"os"
-	"time"
 
 	imagestore "ElephantTrunkArch/ImageStore/go/ImageStore"
+	util "ElephantTrunkArch/Util"
 
 	"github.com/golang/glog"
 	"google.golang.org/grpc"
@@ -127,28 +127,20 @@ func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string
 	
 	glog.Infof("Waiting for redis port to be up...")
 	// Wait until Redis port is up
-	for {
-		redisConn, err := net.DialTimeout("tcp", net.JoinHostPort("", os.Getenv("REDIS_PORT")), (5 * time.Second))
-		if err != nil {
-			glog.Errorf("Redis not started. Retrying...")
-		}
-		if redisConn != nil {
-			redisConn.Close()
-			break
-		}
+	redisPort := os.Getenv("REDIS_PORT")
+	portUp := util.CheckPortAvailability("", redisPort)
+	if !portUp {
+		glog.Errorf("Redis port: %s not up, so exiting...", redisPort)
+		os.Exit(-1)
 	}
 
 	glog.Infof("Waiting for minio port to be up...")
 	// Wait until Minio port is up
-	for {
-		minioConn, err := net.DialTimeout("tcp", net.JoinHostPort("", os.Getenv("MINIO_PORT")), (5 * time.Second))
-		if err != nil {
-			glog.Errorf("Minio not started. Retrying...")
-		}
-		if minioConn != nil {
-			minioConn.Close()
-			break
-		}
+	minioPort := os.Getenv("MINIO_PORT")
+	portUp = util.CheckPortAvailability("", minioPort)
+	if !portUp {
+		glog.Errorf("Minio port: %s not up, so exiting...", minioPort)
+		os.Exit(-1)
 	}
 
 	imgStore, err := imagestore.GetImageStoreInstance(redisConfigMap, minioConfigMap)
