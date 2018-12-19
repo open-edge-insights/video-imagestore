@@ -20,7 +20,6 @@
 """Implementation of persistent storage using Minio
 """
 import uuid
-import urllib
 import datetime
 import io
 import logging
@@ -169,11 +168,11 @@ class MinioStorage:
             if (now - obj.last_modified) > self.retention_time:
                 keys_to_remove.append(obj.object_name)
 
-        self.log.debug('Expired objects: %s', keys_to_remove)
+        #self.log.debug('Expired objects: %s', keys_to_remove)
         errs = self.client.remove_objects(self.bucket_name, keys_to_remove)
 
         for err in errs:
-            self.log.error('Minio failed to remove object "%s"', err)
+            self.log.error('Minio failed to remove object')
 
         # Start the tim er for the clean up proceadure to run in the given
         # amount of seconds
