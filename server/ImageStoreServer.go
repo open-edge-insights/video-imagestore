@@ -82,19 +82,20 @@ func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string
 
 	grpcClient, err := client.NewGrpcInternalClient(ClientCert, ClientKey, RootCA, "ia_data_agent", "50052")
 	if err != nil {
-		glog.Errorf("Error while obtaining GrpcClient object...")
+		glog.Errorf("Error while obtaining GrpcClient object : %s", err)
 		os.Exit(-1)
 	}
 
 	data, err := grpcClient.GetConfigInt("ImgStoreServerCert")
 	if err != nil {
 		glog.Errorf("Unable to read SERVER certificate from DataAgent %s", err)
+		os.Exit(-1)
 	}
 
 	// Read certificate binary
 	certPEMBlock, certValid := data[ServerCert]
 	if !certValid {
-		glog.Errorf("Failed to Read Server Certificate")
+		glog.Error("Failed to Read Server Certificate")
 		os.Exit(-1)
 	}
 
