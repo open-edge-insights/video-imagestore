@@ -27,12 +27,12 @@ import json
 import logging as log
 import sys
 import os
-path = os.path.abspath(__file__)
-sys.path.append(os.path.join(os.path.dirname(path), "../../protobuff/py/"))
-import ImageStore_pb2 as is_pb2
-import ImageStore_pb2_grpc as is_pb2_grpc
+from ImageStore.protobuff.py import ImageStore_pb2 as is_pb2
+from ImageStore.protobuff.py import ImageStore_pb2_grpc as is_pb2_grpc
+from Util.crypto.encrypt_decrypt import SymmetricEncryption
 
 chunk_size = 4095*1024
+
 
 class GrpcImageStoreClient(object):
 
@@ -55,8 +55,15 @@ class GrpcImageStoreClient(object):
             self.hostname = os.environ['IMAGESTORE_SERVER']
         addr = "{0}:{1}".format(self.hostname, self.port)
         log.debug("Establishing secure grpc channel to %s", addr)
-        with open(caCert, 'rb') as f:
-            ca_certs = f.read()
+
+        if 'grpc_int_ssl_secrets' in caCert:
+            key = os.environ["SHARED_KEY"]
+            nonce = os.environ["SHARED_NONCE"]
+            symEncrypt = SymmetricEncryption(key)
+            ca_certs = symEncrypt.DecryptFile(caCert, nonce)
+        else:
+            with open(caCert, 'rb') as f:
+                ca_certs = f.read()
 
         with open(clientKey, 'rb') as f:
             client_key = f.read()
@@ -87,7 +94,7 @@ class GrpcImageStoreClient(object):
         """
         log.debug("Inside Read() client wrapper...")
         response = self.stub.Read(is_pb2.ReadReq(readKeyname=imgHandle),
-                                     timeout=1000)
+                                  timeout=1000)
         outputBytes = b''
         for resp in response:
             outputBytes += resp.chunk
@@ -105,7 +112,7 @@ class GrpcImageStoreClient(object):
         """
         log.debug("Inside Store() client wrapper...")
         data = self._chunkfunction(byteStream, memType)
-        response = self.stub.Store(data, timeout=1000) 
+        response = self.stub.Store(data, timeout=1000)
         log.debug("Sending the response to the caller...")
         return response.storeKeyname
 
@@ -120,14 +127,15 @@ class GrpcImageStoreClient(object):
         """
         log.debug("Inside Remove() client wrapper...")
         response = self.stub.Remove(is_pb2.RemoveReq(remKeyname=imgHandle),
-                                     timeout=1000)
+                                    timeout=1000)
         log.debug("Sending the response to the caller...")
         return None
 
     def _chunkfunction(self, byteStream, memType):
         """
-            ChunkFunction is used to return the generator object which is required
-            by the gRPC store server interface.
+            ChunkFunction is used to return the generator object which
+            is required by the gRPC store server interface.
         """
         for i in range(0, len(byteStream), chunk_size):
-            yield is_pb2.StoreReq(chunk=byteStream[i:i + chunk_size],memoryType=memType)
+            yield is_pb2.StoreReq(chunk=byteStream[i:i + chunk_size],
+                                  memoryType=memType)
