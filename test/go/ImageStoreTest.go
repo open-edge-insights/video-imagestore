@@ -20,7 +20,7 @@ import (
 
 // Client Certificates
 const (
-	RootCA     = "/etc/ssl/grpc_internal/ca_certificate.pem"
+	RootCA     = "/etc/ssl/ca/ca_certificate.pem"
 	ClientCert = "/etc/ssl/imagestore/imagestore_client_certificate.pem"
 	ClientKey  = "/etc/ssl/imagestore/imagestore_client_key.pem"
 )
@@ -48,7 +48,7 @@ func main() {
 	writeFile(outputFile, respMap)
 	somebytes := []byte(somevar)
 	respMapp, err := grpcClient.Store(somebytes, "inmemory")
-	glog.Infof(respMapp)	
+	glog.Infof(respMapp)
 }
 
 func writeFile(filename string, message []byte) {

@@ -38,7 +38,7 @@ logging.basicConfig(level=logging.DEBUG,
 log = logging.getLogger("GRPC_TEST")
 
 
-CA_CERT = "/etc/ssl/grpc_int_ssl_secrets/ca_certificate.pem"
+CA_CERT = "/etc/ssl/ca/ca_certificate.pem"
 IM_CLIENT_KEY = "/etc/ssl/imagestore/imagestore_client_key.pem"
 IM_CLIENT_CERT = "/etc/ssl/imagestore/imagestore_client_certificate.pem"
 
