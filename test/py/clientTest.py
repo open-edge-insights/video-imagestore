@@ -38,14 +38,27 @@ logging.basicConfig(level=logging.DEBUG,
 log = logging.getLogger("GRPC_TEST")
 
 
-CA_CERT = "/etc/ssl/ca/ca_certificate.pem"
-IM_CLIENT_KEY = "/etc/ssl/imagestore/imagestore_client_key.pem"
-IM_CLIENT_CERT = "/etc/ssl/imagestore/imagestore_client_certificate.pem"
+def parse_args():
+    """Parse command line arguments
+    """
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--ca-cert', dest='ca_cert',
+                        help='CA_Cert')
+
+    parser.add_argument('--client-key', dest='client_key',
+                        help='Client Key')
+
+    parser.add_argument('--client-cert', dest='client_cert',
+                        help='Client_Cert')
+
+    return parser.parse_args()
 
 if __name__ == '__main__':
 
-    client = GrpcImageStoreClient(IM_CLIENT_CERT, IM_CLIENT_KEY, CA_CERT,
-                                  hostname="localhost")
+    args = parse_args()
+    client = GrpcImageStoreClient(args.client_cert, args.client_key,
+                                  args.ca_cert, hostname="localhost")
 
     # Testing Read("imgHandle") gRPC call
     keyname = "inmem_335afcab"
@@ -53,7 +66,6 @@ if __name__ == '__main__':
 
     # Testing Store("value") gRPC call
     keyname = client.Store(bytes(0x00), 'inmemory')
-    print(keyname)
 
     # Testing Remove("imgHandle") gRPC call
     client.Remove(keyname)
