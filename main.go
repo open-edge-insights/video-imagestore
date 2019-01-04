@@ -15,6 +15,7 @@ package main
 import (
 	client "ElephantTrunkArch/DataAgent/da_grpc/client/go/client_internal"
 	server "ElephantTrunkArch/ImageStore/server"
+	util "ElephantTrunkArch/Util"
 	"os"
 
 	"os/exec"
@@ -24,13 +25,22 @@ import (
 
 // grpc client certificates
 const (
-	RootCA     = "/etc/ssl/grpc_int_ssl_secrets/ca_certificate.pem"
-	ClientCert = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_certificate.pem"
-	ClientKey  = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_key.pem"
+	RootCA        = "/etc/ssl/grpc_int_ssl_secrets/ca_certificate.pem"
+	ClientCert    = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_certificate.pem"
+	ClientKey     = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_key.pem"
+	daServiceName = "ia_data_agent"
+	daPort        = "50052"
 )
 
 func main() {
-	grpcClient, errr := client.NewGrpcInternalClient(ClientCert, ClientKey, RootCA, "ia_data_agent", "50052")
+	// Wait for DA to be up
+	ret := util.CheckPortAvailability(daServiceName, daPort)
+	if !ret {
+		glog.Error("DataAgent is not up, so exiting...")
+		os.Exit(-1)
+	}
+
+	grpcClient, errr := client.NewGrpcInternalClient(ClientCert, ClientKey, RootCA, daServiceName, daPort)
 	if errr != nil {
 		glog.Errorf("Error while obtaining GrpcClient object...")
 		os.Exit(-1)
