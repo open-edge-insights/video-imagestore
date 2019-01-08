@@ -224,8 +224,6 @@ func StartMinioRetentionPolicy(config map[string]string) {
 			if elapsed > retentionTime {
 				glog.Infof("Deleting key: %s", obj.Key)
 				objectsCh <- obj.Key
-			} else {
-				glog.Infof("Not deleting key: %s", obj.Key)
 			}
 		}
 
