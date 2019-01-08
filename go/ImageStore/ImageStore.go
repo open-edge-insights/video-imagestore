@@ -96,7 +96,7 @@ func GetImageStoreInstance(cfg map[string]string, persistCfg map[string]string) 
 		return nil, err
 	}
 
-	persistentStorage, err := persistent.NewPersistentMinimal("minio", persistCfg)
+	persistentStorage, err := persistent.NewPersistent("minio", persistCfg)
 	if err != nil {
 		return nil, err
 	}

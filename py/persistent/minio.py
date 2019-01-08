@@ -20,10 +20,8 @@
 """Implementation of persistent storage using Minio
 """
 import uuid
-import datetime
 import io
 import logging
-from threading import Timer
 from minio import Minio
 from minio.error import ResponseError, NoSuchKey, BucketAlreadyExists, \
         BucketAlreadyOwnedByYou
@@ -46,8 +44,6 @@ class MinioStorage:
             self.timer = None
             # May want to put in the config
             self.bucket_name = 'image-store-bucket'
-            self.retention_time = datetime.timedelta(
-                    seconds=int(config['RetentionTime']))
 
             # Creating connection to the Minio bucket
             ssl_str = config['Ssl'].lower()
@@ -72,10 +68,6 @@ class MinioStorage:
                 pass
             except ResponseError:
                 raise
-
-            # Remove any objects in Minio that should be expired based on the
-            # retention policies
-            self._clean_store()
         except KeyError as e:
             raise DAException('Config missing key: {}'.format(e))
 
@@ -153,30 +145,3 @@ class MinioStorage:
             key = 'persist_' + str(uuid.uuid1())[:8]
 
         return key
-
-    def _clean_store(self):
-        """Private helper method to execute the retention policies on the
-        objects in Minio.
-        """
-        self.log.debug('Cleaning up Minio object store')
-
-        objects = self.client.list_objects(self.bucket_name)
-        now = datetime.datetime.now(datetime.timezone.utc)
-        keys_to_remove = []
-
-        for obj in objects:
-            if (now - obj.last_modified) > self.retention_time:
-                keys_to_remove.append(obj.object_name)
-
-        #self.log.debug('Expired objects: %s', keys_to_remove)
-        errs = self.client.remove_objects(self.bucket_name, keys_to_remove)
-
-        for err in errs:
-            self.log.error('Minio failed to remove object')
-
-        # Start the tim er for the clean up proceadure to run in the given
-        # amount of seconds
-        self.timer = Timer(
-                self.retention_time.total_seconds(), self._clean_store)
-        self.timer.daemon = True
-        self.timer.start()

@@ -25,8 +25,6 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"strconv"
-	"time"
 
 	"github.com/golang/glog"
 	uuid "github.com/google/uuid"
@@ -41,8 +39,7 @@ const region string = "gateway"
 
 // Minio storage abstraction
 type MinioStorage struct {
-	client        *(minio.Client)
-	retentionTime time.Duration
+	client *(minio.Client)
 }
 
 // Helper method for reporting a missing key in the Minio configuration
@@ -119,67 +116,15 @@ func initClient(config map[string]string) (*minio.Client, error) {
 
 // Create a new instance of the MinioStorage
 func NewMinioStorage(config map[string]string) (*MinioStorage, error) {
-	retentionTimeStr, ok := config["RetentionTime"]
-	if !ok {
-		return nil, missingKeyError("RetentionTime")
-	}
-
-	retentionTime, err := strconv.ParseInt(retentionTimeStr, 10, 64)
-	if err != nil {
-		msg := "Retention time must be an integer in Minio config"
-		glog.Errorf(msg)
-		return nil, errors.New(msg)
-	}
-
 	client, err := initClient(config)
 	if err != nil {
 		// Error has already been logged
 		return nil, err
 	}
 
-	minioStorage := &MinioStorage{
-		client:        client,
-		retentionTime: time.Duration(retentionTime) * time.Second}
-
-	// Clear out Minio of old data on start, this also starts the timer for
-	// the clean up procedure to run again based on the retention time
-	glog.Infof("Cleaning store")
-	err = minioStorage.cleanStore()
-	if err != nil {
-		glog.Error("Failed to clear object store: ", err)
-		return nil, err
-	}
+	minioStorage := &MinioStorage{client: client}
 
 	glog.Infof("Initialization finished")
-	return minioStorage, nil
-}
-
-// Initialize minio storage which does not attempt to clean up the image store.
-// This assumes that the user already initializes the Minio ImageStore in
-// other points in the systsm (i.e. video ingestion)
-func NewMinioStorageMinimal(config map[string]string) (*MinioStorage, error) {
-	retentionTimeStr, ok := config["RetentionTime"]
-	if !ok {
-		return nil, missingKeyError("RetentionTime")
-	}
-
-	retentionTime, err := strconv.ParseInt(retentionTimeStr, 10, 64)
-	if err != nil {
-		msg := "Retention time must be an integer in Minio config"
-		glog.Errorf(msg)
-		return nil, errors.New(msg)
-	}
-
-	client, err := initClient(config)
-	if err != nil {
-		// Error has already been logged
-		return nil, err
-	}
-
-	minioStorage := &MinioStorage{
-		client:        client,
-		retentionTime: time.Duration(retentionTime) * time.Second}
-
 	return minioStorage, nil
 }
 
@@ -225,55 +170,6 @@ func (pMinioStorage *MinioStorage) Store(data []byte) (string, error) {
 	}
 
 	return key, nil
-}
-
-// Clean up the image store
-func (pMinioStorage *MinioStorage) cleanStore() error {
-	// Channel for objects to be removed from Minio
-	objectsCh := make(chan string)
-	objectsErrCh := make(chan error, 1)
-	defer close(objectsErrCh)
-
-	// Routine to find objects to remove and send them over the `objectsCh`
-	go func() {
-		// Defer channel close to when the function exits
-		defer close(objectsCh)
-		now := time.Now()
-
-		for obj := range pMinioStorage.client.ListObjects(bucketName, "", false, nil) {
-			if obj.Err != nil {
-				glog.Errorf("Failed retrieving objects from Minio: %v", obj.Err)
-				objectsErrCh <- obj.Err
-				return
-			}
-			elapsed := now.Sub(obj.LastModified)
-			if elapsed > pMinioStorage.retentionTime {
-				objectsCh <- obj.Key
-			}
-		}
-
-		objectsErrCh <- nil
-	}()
-
-	for rErr := range pMinioStorage.client.RemoveObjects(bucketName, objectsCh) {
-		glog.Errorf("Error removing objects from Minio: %v", rErr)
-		return errors.New("Failed removing objects from Minio")
-	}
-
-	if err := <-objectsErrCh; err != nil {
-		return err
-	}
-
-	// Start timer for next clean up
-	time.AfterFunc(
-		time.Duration(pMinioStorage.retentionTime), func() {
-			err := pMinioStorage.cleanStore()
-			if err != nil {
-				glog.Errorf("Failed to clear Minio object store: %v", err)
-			}
-		})
-
-	return nil
 }
 
 // generateKeyName : This used to generate the keyname

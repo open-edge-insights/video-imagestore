@@ -67,26 +67,6 @@ func NewPersistent(storageType string, config map[string]string) (*Persistent, e
 	}
 }
 
-// NewPersistentMinimal : Initialize a minimal version of the persistent storage.
-// This is designed to allow disabling longer initialization tasks that are not
-// required by a certain client, such as enforcing a retention policy.
-func NewPersistentMinimal(storageType string, config map[string]string) (*Persistent, error) {
-	if storageType == MINIO {
-		storage, err := minio.NewMinioStorageMinimal(config)
-		if err != nil {
-			glog.Errorf("Error initializing Minio storage: %v", err)
-			return nil, err
-		}
-
-		return &Persistent{storage: storage}, nil
-	} else {
-		msg := "Persistent storage type not supported: " + storageType
-		glog.Errorf(msg)
-		err := errors.New(msg)
-		return nil, err
-	}
-}
-
 // Get the key to retrieve the configuration from gRPC
 func GetConfgKey(storageType string) (string, error) {
 	storageType = strings.ToLower(storageType)
