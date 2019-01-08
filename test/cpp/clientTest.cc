@@ -86,9 +86,8 @@ int main(int argc, char** argv) {
   std::cout << "-------------- Calling Read --------------" << std::endl;
   cout << argv[1] << endl;
   std::string response = gclient.Read(argv[1]);
-  std::remove(argv[2]);
   std::ofstream out;
-  out.open(argv[2],std::ios::app | std::ios::binary);
+  out.open(argv[2], std::ios::binary);
   out << response;
   out.close();
   bool remove_response = gclient.Remove(argv[1]);

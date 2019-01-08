@@ -72,6 +72,16 @@ class ImageStoreClient{
       }
       return response;
   }
+
+  /*
+              Remove is a wrapper around gRPC C++ client implementation
+              for Remove gRPC interface.
+              Arguments:
+              imgHandle(string): key for ImageStore
+              Returns:
+              The consolidated boolean if whether the consolidated
+              value was removed.
+  */
   bool Remove(const std::string& imgHandle)
   {
       RemoveReq request;
