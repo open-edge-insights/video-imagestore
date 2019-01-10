@@ -61,9 +61,9 @@ int main(int argc, char** argv) {
   std::string key;
   std::string cert;
 
-  read("/etc/ssl/imagestore/imagestore_client_certificate.pem", cert);
-	read("/etc/ssl/imagestore/imagestore_client_key.pem", key);
-	read("/etc/ssl/ca/ca_certificate.pem", root);
+       read(argv[3], cert);
+	read(argv[4], key);
+	read(argv[5], root);
 
   grpc::SslCredentialsOptions opts =
 		{
