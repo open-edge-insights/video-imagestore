@@ -17,7 +17,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	b64 "encoding/base64"
-	"flag"
 	"io"
 	"path/filepath"
 
@@ -66,9 +65,6 @@ func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string
 		gRPCImageStoreHost = ipAddr[0].String()
 	}
 
-	flag.Parse()
-
-	flag.Lookup("alsologtostderr").Value.Set("true")
 
 	defer glog.Flush()
 	if len(os.Args) < 1 {
@@ -213,7 +209,7 @@ func (s *IsServer) Store(rcv pb.Is_StoreServer) error {
 		point, err := rcv.Recv()
 		if err != nil {
 			if err == io.EOF {
-				glog.Infof("Transfer of %d bytes successful", len(blob))
+				glog.V(1).Infof("Transfer of %d bytes successful", len(blob))
 				break
 			}
 			glog.Errorf("Error while receiving: %v", err)

@@ -18,7 +18,7 @@ import (
 	util "ElephantTrunkArch/Util"
 	"os"
 	"time"
-
+       "flag"
 	"os/exec"
 
 	"github.com/golang/glog"
@@ -36,6 +36,8 @@ const (
 
 func main() {
 	// Wait for DA to be up
+        flag.Parse()
+        defer glog.Flush()
 	ret := util.CheckPortAvailability(daServiceName, daPort)
 	if !ret {
 		glog.Error("DataAgent is not up, so exiting...")
@@ -224,6 +226,8 @@ func StartMinioRetentionPolicy(config map[string]string) {
 			if elapsed > retentionTime {
 				glog.Infof("Deleting key: %s", obj.Key)
 				objectsCh <- obj.Key
+			} else {
+				glog.V(2).Infof("Not deleting key: %s", obj.Key)
 			}
 		}
 
