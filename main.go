@@ -16,6 +16,7 @@ import (
 	client "ElephantTrunkArch/DataAgent/da_grpc/client/go/client_internal"
 	server "ElephantTrunkArch/ImageStore/server"
 	util "ElephantTrunkArch/Util"
+	cpuidutil "ElephantTrunkArch/Util/cpuid"
 	"os"
 	"time"
        "flag"
@@ -37,6 +38,13 @@ const (
 func main() {
 	// Wait for DA to be up
         flag.Parse()
+	
+	vendor_name := cpuidutil.Cpuid()
+	if vendor_name != "GenuineIntel" {
+		glog.Infof("*****Software runs only on Intel's hardware*****")
+		os.Exit(-1)
+	}
+
         defer glog.Flush()
 	ret := util.CheckPortAvailability(daServiceName, daPort)
 	if !ret {
