@@ -60,10 +60,12 @@ int main(int argc, char** argv) {
   std::string root;
   std::string key;
   std::string cert;
+  int exitCondition = 1;
+  int returnCondition = 0;
 
-       read(argv[3], cert);
-	read(argv[4], key);
-	read(argv[5], root);
+  read("/etc/ssl/imagestore/imagestore_client_certificate.pem", cert);
+  read("/etc/ssl/imagestore/imagestore_client_key.pem", key);
+  read("/etc/ssl/ca/ca_certificate.pem", root);
 
   grpc::SslCredentialsOptions opts =
 		{
@@ -76,12 +78,12 @@ int main(int argc, char** argv) {
   if(argc < 2)
   {
     cout << "Please provide imgHandle key and output file path as arguments." << endl;
-    exit(1);
+    exit(exitCondition);
   }
   else if(argc == 2)
   {
     cout << "Please provide output file path as 2nd argument." << endl;
-    exit(1);
+    exit(exitCondition);
   }
   std::cout << "-------------- Calling Read --------------" << std::endl;
   cout << argv[1] << endl;
@@ -92,5 +94,5 @@ int main(int argc, char** argv) {
   out.close();
   bool remove_response = gclient.Remove(argv[1]);
   cout << "Remove status :" << remove_response << endl;
-  return 0;
+  return returnCondition;
 }
