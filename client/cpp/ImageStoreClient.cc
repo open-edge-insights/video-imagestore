@@ -57,16 +57,19 @@ class ImageStoreClient{
       request.set_readkeyname(imgHandle);
       ReadResp reply;
       ClientContext context;
-      std::cout << imgHandle << std::endl;
+      std::cout << __FILE__ << " : " << __LINE__ << " : " << "ImageHandle: " << imgHandle << std::endl;
       std::unique_ptr<grpc::ClientReader<ReadResp> > reader(_stub->Read(&context, request));
       std::string response = "";
       while (reader->Read(&reply)) {
         response = response + reply.chunk();
       }
       Status status = reader->Finish();
-      if (status.ok()) {
+      bool statusCheck = status.ok();
+      if (statusCheck) {
         std::cout << "Transfer successful." << std::endl;
-      }  
+      } else {
+        std::cout << "Transfer failed." << std::endl;
+      }
       return response;
   }
 
@@ -85,12 +88,15 @@ class ImageStoreClient{
       request.set_remkeyname(imgHandle);
       RemoveResp reply;
       ClientContext context;
-      std::cout << imgHandle << std::endl;
+      std::cout << __FILE__ << " : " << __LINE__ << " : " << "ImageHandle: " << imgHandle << std::endl;
       bool response = false;
       Status status = _stub->Remove(&context, request, &reply);
-      if (status.ok()) {
+      bool statusCheck = status.ok();
+      if (statusCheck) {
         std::cout << "Remove successful." << std::endl;
         response = true;
+      } else {
+        std::cout << "Remove failed." << std::endl;
       }
       return response;
   }

@@ -1,6 +1,18 @@
 HOST_SYSTEM = $(shell uname | cut -f 1 -d_)
 SYSTEM ?= $(HOST_SYSTEM)
 CXX = g++
+
+# cert/key path for imagestore and CA
+SERVER_CERTS = /etc/ssl/imagestore
+CLIENT_CERTS = /etc/ssl/imagestore
+CA_CERTS = /etc/ssl/ca
+
+# ImageStore hostname/port
+HOST = localhost
+PORT = 50055
+IMG_HANDLE = "persist_47554d01" # inmem_ and persist_ image handles
+OUTPUT_FILE = test.png
+
 CPPFLAGS += `pkg-config --cflags protobuf grpc`
 CXXFLAGS += -std=c++11
 PROTOC = protoc
@@ -14,8 +26,13 @@ LDFLAGS += -L/usr/local/lib `pkg-config --libs protobuf grpc++ grpc`\
 
 all: clientTest
 
-clientTest:	system-check ImageStore.pb.o ImageStore.grpc.pb.o clientTest.o
+clientTest:	clean system-check ImageStore.pb.o ImageStore.grpc.pb.o clientTest.o
 			$(CXX) $(PROTOCPPPATH)/ImageStore.pb.o $(PROTOCPPPATH)/ImageStore.grpc.pb.o clientTest.o $(LDFLAGS) -o clientTest
+			./clientTest $(HOST) $(PORT) $(SERVER_CERTS)/imagestore_client_certificate.pem \
+			                             $(SERVER_CERTS)/imagestore_client_key.pem \
+										 $(CA_CERTS)/ca_certificate.pem \
+										 $(IMG_HANDLE) \
+										 $(OUTPUT_FILE)
 
 ImageStore.pb.o:
 	protoc -I $(PROTOPATH) --cpp_out=$(PROTOCPPPATH)/ $(PROTOPATH)/ImageStore.proto

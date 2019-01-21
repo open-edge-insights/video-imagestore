@@ -43,6 +43,12 @@ def parse_args():
     """
     parser = argparse.ArgumentParser()
 
+    parser.add_argument('--hostname', dest='hostname',
+                        help='ip address of the node running ETA')
+
+    parser.add_argument('--port', dest='port',
+                        help='CA_Cert')
+
     parser.add_argument('--ca-cert', dest='ca_cert',
                         help='CA_Cert')
 
@@ -58,14 +64,13 @@ if __name__ == '__main__':
 
     args = parse_args()
     client = GrpcImageStoreClient(args.client_cert, args.client_key,
-                                  args.ca_cert, hostname="localhost")
-
-    # Testing Read("imgHandle") gRPC call
-    keyname = "inmem_335afcab"
-    config = client.Read(keyname)
+                                  args.ca_cert, hostname=args.hostname)
 
     # Testing Store("value") gRPC call
     keyname = client.Store(bytes(0x00), 'inmemory')
+
+    # Testing Read("imgHandle") gRPC call
+    config = client.Read(keyname)
 
     # Testing Remove("imgHandle") gRPC call
     client.Remove(keyname)

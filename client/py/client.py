@@ -106,7 +106,8 @@ class GrpcImageStoreClient(object):
             Store is a wrapper around gRPC python client implementation
             for Store gRPC interface.
             Arguments:
-            config(string): byte stream to be stored
+            byteStream(byte[]): byte stream to be stored
+            memType: inmemory or persistence
             Returns:
             The imgHandle corresponding to the stored config value
         """
@@ -121,7 +122,7 @@ class GrpcImageStoreClient(object):
             Remove is a wrapper around gRPC python client implementation
             for Remove gRPC interface.
             Arguments:
-            config(string): imgHandle
+            imgHandle(string): imgHandle
             Returns:
             None
         """

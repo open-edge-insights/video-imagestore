@@ -63,9 +63,15 @@ int main(int argc, char** argv) {
   int exitCondition = 1;
   int returnCondition = 0;
 
-  read("/etc/ssl/imagestore/imagestore_client_certificate.pem", cert);
-  read("/etc/ssl/imagestore/imagestore_client_key.pem", key);
-  read("/etc/ssl/ca/ca_certificate.pem", root);
+  if(argc < 7)
+  {
+    cout << "Usage: ./clientTest <imgstore_host> <imgstore_port> <img_client_cert> <img_client_key> <ca_cert> <img_handle> <output_file" << endl;
+    exit(exitCondition);
+  }
+
+  read(argv[3], cert);
+  read(argv[4], key);
+  read(argv[5], root);
 
   grpc::SslCredentialsOptions opts =
 		{
@@ -73,26 +79,23 @@ int main(int argc, char** argv) {
 			key,
 			cert
 		};
-  ImageStoreClient gclient(grpc::CreateChannel("localhost:50055",
+
+  std::string endpoint;
+  endpoint = argv[1];
+  endpoint += ":";
+  endpoint += argv[2];
+  std::cout << "Endpoint: " << endpoint << std::endl;
+  ImageStoreClient gclient(grpc::CreateChannel(endpoint,
                         grpc::SslCredentials(opts)));
-  if(argc < 2)
-  {
-    cout << "Please provide imgHandle key and output file path as arguments." << endl;
-    exit(exitCondition);
-  }
-  else if(argc == 2)
-  {
-    cout << "Please provide output file path as 2nd argument." << endl;
-    exit(exitCondition);
-  }
+
   std::cout << "-------------- Calling Read --------------" << std::endl;
-  cout << argv[1] << endl;
-  std::string response = gclient.Read(argv[1]);
+  cout << "Image handle received from command line:" <<  argv[6] << endl;
+  std::string response = gclient.Read(argv[6]);
   std::ofstream out;
-  out.open(argv[2], std::ios::binary);
+  out.open(argv[7], std::ios::binary);
   out << response;
   out.close();
-  bool remove_response = gclient.Remove(argv[1]);
+  bool remove_response = gclient.Remove(argv[6]);
   cout << "Remove status :" << remove_response << endl;
   return returnCondition;
 }
