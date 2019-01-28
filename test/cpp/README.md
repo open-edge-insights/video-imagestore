@@ -35,4 +35,4 @@ ImageStore Module provides C++ APIs for image read and remove in both in-memory(
 >    OK
 >    127.0.0.1:6379> KEYS *
 >   ```
-> 3. Go to `/opt/intel/eta/data/image-store-bucket` path to fetch the blob for `perist` image handle stored in minio.
+> 3. Go to `/opt/intel/iei/data/image-store-bucket` path to fetch the blob for `perist` image handle stored in minio.
