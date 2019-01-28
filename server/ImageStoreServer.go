@@ -13,7 +13,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package server
 
 import (
-	pb "ElephantTrunkArch/ImageStore/protobuff/go"
+	pb "IEdgeInsights/ImageStore/protobuff/go"
 	"crypto/tls"
 	"crypto/x509"
 	b64 "encoding/base64"
@@ -24,9 +24,9 @@ import (
 	"net"
 	"os"
 
-	client "ElephantTrunkArch/DataAgent/da_grpc/client/go/client_internal"
-	imagestore "ElephantTrunkArch/ImageStore/go/ImageStore"
-	util "ElephantTrunkArch/Util"
+	client "IEdgeInsights/DataAgent/da_grpc/client/go/client_internal"
+	imagestore "IEdgeInsights/ImageStore/go/ImageStore"
+	util "IEdgeInsights/Util"
 
 	"github.com/golang/glog"
 	"google.golang.org/grpc"

@@ -22,7 +22,7 @@ SOFTWARE.
 package Persistent
 
 import (
-	"ElephantTrunkArch/ImageStore/go/ImageStore/Persistent/minio"
+	"IEdgeInsights/ImageStore/go/ImageStore/Persistent/minio"
 	"errors"
 	"strings"
 

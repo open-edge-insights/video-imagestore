@@ -30,7 +30,7 @@ ImageStore Module provides C++ APIs for image read and remove in both in-memory(
 > redis by following below steps:
 >
 >    ```sh
->    I have no name!@ia_imagestore:/ETA/go/src/ElephantTrunkArch$ ./redis-5.0.2/src/redis-cli
+>    I have no name!@ia_imagestore:/ETA/go/src/IEdgeInsights$ ./redis-5.0.2/src/redis-cli
 >    127.0.0.1:6379> AUTH redis123
 >    OK
 >    127.0.0.1:6379> KEYS *

@@ -11,7 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package client
 
 import (
-	pb "ElephantTrunkArch/ImageStore/protobuff/go"
+	pb "IEdgeInsights/ImageStore/protobuff/go"
 	"crypto/tls"
 	"crypto/x509"
 	"io"

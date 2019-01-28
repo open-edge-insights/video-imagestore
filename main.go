@@ -13,11 +13,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package main
 
 import (
-	client "ElephantTrunkArch/DataAgent/da_grpc/client/go/client_internal"
-	server "ElephantTrunkArch/ImageStore/server"
-	util "ElephantTrunkArch/Util"
-	cpuidutil "ElephantTrunkArch/Util/cpuid"
-	"flag"
+	client "IEdgeInsights/DataAgent/da_grpc/client/go/client_internal"
+	server "IEdgeInsights/ImageStore/server"
+	util "IEdgeInsights/Util"
+	cpuidutil "IEdgeInsights/Util/cpuid"
 	"os"
 	"os/exec"
 	"time"
