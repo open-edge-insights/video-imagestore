@@ -45,7 +45,7 @@ class GrpcImageStoreClient(object):
             clientKey - refers to the imagestore client key
             caCert - refers to the ca certificate
             hostname - refers to hostname/ip address of the m/c
-                       where DataAgent module of ETA is running
+                       where DataAgent module of IEI is running
                        (default: localhost)
             port     - refers to gRPC port (default: 50055)
         """

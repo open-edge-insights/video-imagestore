@@ -11,7 +11,7 @@ ImageStore Module provides APIs for image read, store and remove in both in-memo
     > **Note**: `../../../` refers to parent directory of ImageStore. This should be adjusted accordingly based on where the `clientTest.py` resides w.r.t `ImageStore` folder
 * Set `no_proxy` env variable
     ```sh
-    export no_proxy=$no_proxy,<ETA_node_ip_address>
+    export no_proxy=$no_proxy,<IEI_node_ip_address>
     ```
 * Copying certs and keys:
     * Copy ImageStore client cert and key to /etc/ssl/imagestore
@@ -23,12 +23,12 @@ ImageStore Module provides APIs for image read, store and remove in both in-memo
 ## How to Test from present working directory (ImageStore/test/py/)
 
 ```sh
-    python3.6 clientTest.py --hostname <ETA_node_ip_address> \
+    python3.6 clientTest.py --hostname <IEI_node_ip_address> \
                             --port 50055 \
                             --client-cert /etc/ssl/imagestore/imagestore_client_certificate.pem \
                             --client-key /etc/ssl/imagestore/imagestore_client_key.pem \
                             --ca-cert /etc/ssl/ca/ca_certificate.pem
 ```
 
-> **Note**: Right now, the ETA ImageStore gRPC server runs at port `50055`. If one wish to change this, ensure that ETA's ImageStore gRPC server
+> **Note**: Right now, the IEI ImageStore gRPC server runs at port `50055`. If one wish to change this, ensure that IEI's ImageStore gRPC server
 > also is listening at that port.

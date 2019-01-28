@@ -44,7 +44,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--hostname', dest='hostname',
-                        help='ip address of the node running ETA')
+                        help='ip address of the node running IEI')
 
     parser.add_argument('--port', dest='port',
                         help='CA_Cert')
