@@ -17,10 +17,10 @@ import (
 	server "ElephantTrunkArch/ImageStore/server"
 	util "ElephantTrunkArch/Util"
 	cpuidutil "ElephantTrunkArch/Util/cpuid"
+	"flag"
 	"os"
-	"time"
-       "flag"
 	"os/exec"
+	"time"
 
 	"github.com/golang/glog"
 	minio "github.com/minio/minio-go"
@@ -37,15 +37,15 @@ const (
 
 func main() {
 	// Wait for DA to be up
-        flag.Parse()
-	
+	flag.Parse()
+
 	vendor_name := cpuidutil.Cpuid()
 	if vendor_name != "GenuineIntel" {
 		glog.Infof("*****Software runs only on Intel's hardware*****")
 		os.Exit(-1)
 	}
 
-        defer glog.Flush()
+	defer glog.Flush()
 	ret := util.CheckPortAvailability(daServiceName, daPort)
 	if !ret {
 		glog.Error("DataAgent is not up, so exiting...")
@@ -126,8 +126,6 @@ func StartMinioRetentionPolicy(config map[string]string) {
 		os.Exit(-1)
 	}
 
-	glog.Infof("Initializing Minio client")
-
 	region := "gateway"
 	bucketName := "image-store-bucket"
 	host := "localhost"
@@ -185,9 +183,8 @@ func StartMinioRetentionPolicy(config map[string]string) {
 		os.Exit(-1)
 	}
 
-	glog.Infof("Config: Host=%s, Port=%s, ssl=%v", host, port, ssl)
+	glog.V(1).Infof("Config: Host=%s, Port=%s, ssl=%v", host, port, ssl)
 
-	glog.Infof("Initializing Minio client")
 	client, err := minio.NewWithRegion(
 		host+":"+port, accessKey, secretKey, ssl, region)
 	if err != nil {
@@ -196,7 +193,7 @@ func StartMinioRetentionPolicy(config map[string]string) {
 	}
 
 	// Check if the bucket exists
-	glog.Infof("Checking if Minio bucket already exists")
+	glog.V(1).Infof("Checking if Minio bucket already exists")
 	found, err := client.BucketExists(bucketName)
 	if err != nil {
 		glog.Errorf("Failed to verify existence of bucket: %v", err)
@@ -216,7 +213,7 @@ func StartMinioRetentionPolicy(config map[string]string) {
 
 	// Routine to find objects to remove and send them over the `objectsCh`
 	go func() {
-		glog.Infof("Finding objects in Minio to delete")
+		glog.V(1).Infof("Finding objects in Minio to delete")
 
 		// Defer channel close to when the function exits
 		defer close(objectsCh)
@@ -232,7 +229,7 @@ func StartMinioRetentionPolicy(config map[string]string) {
 			elapsed := now.Sub(obj.LastModified)
 
 			if elapsed > retentionTime {
-				glog.Infof("Deleting key: %s", obj.Key)
+				glog.V(1).Infof("Deleting key: %s", obj.Key)
 				objectsCh <- obj.Key
 			} else {
 				glog.V(2).Infof("Not deleting key: %s", obj.Key)
@@ -254,7 +251,7 @@ func StartMinioRetentionPolicy(config map[string]string) {
 	// Start timer for next clean up
 	time.AfterFunc(
 		time.Duration(pollInterval), func() {
-			glog.Infof("Executing retention policy")
+			glog.V(1).Infof("Executing retention policy")
 			StartMinioRetentionPolicy(config)
 		})
 }
