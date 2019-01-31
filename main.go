@@ -17,6 +17,7 @@ import (
 	server "IEdgeInsights/ImageStore/server"
 	util "IEdgeInsights/Util"
 	cpuidutil "IEdgeInsights/Util/cpuid"
+	"flag"
 	"os"
 	"os/exec"
 	"time"
