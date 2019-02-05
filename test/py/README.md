@@ -4,6 +4,7 @@ ImageStore Module provides APIs for image read, store and remove in both in-memo
 ## Pre-requisites (present working directory - ImageStore/test/py/)
 
 * `ia_imagestore` container should be running
+* Install imagestore_requirements.txt (for python) by running cmd: `sudo -H pip3.6 install -r imagestore_requirements.txt`
 * Set `PYTHONPATH` env variable
     ```sh
         export PYTHONPATH=../../../:../../../ImageStore/protobuff/py:../../../ImageStore/client/py
