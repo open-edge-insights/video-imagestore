@@ -10,6 +10,7 @@ Explicit permissions are required to publish, distribute, sublicense, and/or sel
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+// Package server is the server library of ImageStore APIs
 package server
 
 import (
@@ -50,12 +51,12 @@ const (
 	ClientKey  = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_key.pem"
 )
 
-// IsServer is used to implement ImageStore.IsServer
+// IsServer is a struct used to implement ImageStore.IsServer
 type IsServer struct {
 	is *imagestore.ImageStore
 }
 
-// StartGrpcServer starts the ImageStore grpc server
+// StartGrpcServer is used to start the ImageStore grpc server
 func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string]string) {
 
 	ipAddr, err := net.LookupIP("ia_imagestore")
@@ -176,7 +177,13 @@ func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string
 	}
 }
 
-// Read implementation
+// Read is a wrapper around gRPC go server implementation for
+// Read interface.
+//
+// It takes image handle of image to be read as a parameter.
+//
+// It streams the consolidated byte array of the image handle provided
+// and returns an error if read fails.
 func (s *IsServer) Read(in *pb.ReadReq, srv pb.Is_ReadServer) error {
 	output, err := s.is.Read(in.ReadKeyname)
 	if err != nil {
@@ -207,7 +214,14 @@ func (s *IsServer) Read(in *pb.ReadReq, srv pb.Is_ReadServer) error {
 	return nil
 }
 
-// Store implementation
+// Store is a wrapper around gRPC go server implementation for
+// Store interface.
+//
+// It takes a byte array to be stored in ImageStore and memory type
+// as parameter from client library.
+//
+// It returns the image handle of the byte array stored and an error
+// if store fails.
 func (s *IsServer) Store(rcv pb.Is_StoreServer) error {
 	blob := []byte{}
 	memType := ""
@@ -236,7 +250,13 @@ func (s *IsServer) Store(rcv pb.Is_StoreServer) error {
 	})
 }
 
-// Remove implementation
+// Remove is a wrapper around gRPC go server implementation for
+// Remove interface.
+//
+// It takes image handle of the image to be removed as a parameter.
+//
+// It returns the consolidated value of whether the image was
+// successfully removed and an error if remove fails.
 func (s *IsServer) Remove(ctx context.Context, in *pb.RemoveReq) (*pb.RemoveResp, error) {
 	errr := s.is.Remove(in.RemKeyname)
 	if errr != nil {

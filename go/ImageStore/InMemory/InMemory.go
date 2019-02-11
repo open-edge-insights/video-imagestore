@@ -7,6 +7,8 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+
+// Package InMemory is a wrapper around Read, Remove and Store APIs of ImageStore.
 package InMemory
 
 import (
@@ -17,16 +19,16 @@ import (
 	"github.com/golang/glog"
 )
 
-// InMemory : This struct is used to comprise all Inmemory methods in it's scope
+// InMemory is a struct used to comprise all Inmemory methods in it's scope
 type InMemory struct {
 	memType      string
 	redisConnect *(redis.RedisConnect) //TODO: This should actually be an interface referring to respective concrete classes
 }
 
-// memoryDB : This should be used for Module Level Check with Memory Type
+// memoryDB is used for module level check with memory type
 const memoryDB string = "redis"
 
-// NewInmemory : This method used to initialize the connection based on dataAgent settings
+// NewInmemory is used to initialize the connection based on DataAgent settings
 func NewInmemory(config map[string]string) (*InMemory, error) {
 	inMemoryType := config["InMemory"]
 	if memoryDB == inMemoryType {
@@ -46,17 +48,29 @@ func NewInmemory(config map[string]string) (*InMemory, error) {
 
 }
 
-// Read : This helps to read the data from InMemory, It Accepts keyname as input
+// Read is used to read the data from InMemory.
+//
+// It accepts keyname as input.
+//
+// It returns the image of the consolidated keyname.
 func (pInMemory *InMemory) Read(keyname string) (*io.Reader, error) {
 	return pInMemory.redisConnect.Read(keyname)
 }
 
-// Remove : This helps to Remove the data from InMemory, It Accepts keyname as input
+// Remove is used to remove the data from InMemory.
+//
+// It accepts keyname as input.
+//
+// It returns an error if removing the consolidated image fails.
 func (pInMemory *InMemory) Remove(keyname string) error {
 	return pInMemory.redisConnect.Remove(keyname)
 }
 
-// Store : This helps to store the data in InMemory, It Accepts value as input
+// Store is used to store the data in InMemory.
+//
+// It accepts value of image to be stored as input.
+//
+// It returns image handle of image stored.
 func (pInMemory *InMemory) Store(value []byte) (string, error) {
 	return pInMemory.redisConnect.Store(value)
 }

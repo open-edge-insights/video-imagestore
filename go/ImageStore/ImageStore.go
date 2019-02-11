@@ -8,6 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+// Package ImageStore exports Read, Remove, Store and SetStorageType APIs.
 package ImageStore
 
 import (
@@ -21,13 +22,13 @@ import (
 	"github.com/golang/glog"
 )
 
-// This const pattern used for inmemory key reference
+// inMemKeyPattern is the key pattern used for inmemory key reference
 const inMemKeyPattern string = "inmem"
 
-// Key pattern for persistent key references
+// persistKeyPattern is the key pattern used for persistent key references.
 const persistKeyPattern string = "persist"
 
-// ImageStore :  ImageStore is a struct, used for store & retrieve operations
+// ImageStore :  ImageStore is a struct, used for store & retrieve operations.
 type ImageStore struct {
 	storageType       string
 	inMemory          *(inmemory.InMemory) //TODO: This should actually be an interface referring to respective concrete classes
@@ -41,7 +42,7 @@ const (
 	ClientKey  = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_key.pem"
 )
 
-// NewImageStore : This is the Constructor type method which initialises the Object for ImageStore Operations
+// NewImageStore is the constructor type method which initialises the object for ImageStore Operations.
 func NewImageStore() (*ImageStore, error) {
 
 	//TODO: This call is failing when trying to connect to gRPC server running in the same container.
@@ -88,8 +89,8 @@ func NewImageStore() (*ImageStore, error) {
 	return &ImageStore{storageType: "", inMemory: inMemory, persistentStorage: persistentStorage}, nil
 }
 
-// GetImageStoreInstance : This is the Constructor type method which takes the image store config
-// and initialises the Object for ImageStore Operations
+// GetImageStoreInstance is the constructor type method which takes the image store config
+// and initialises the Object for ImageStore Operations.
 func GetImageStoreInstance(cfg map[string]string, persistCfg map[string]string) (*ImageStore, error) {
 	cfg["InMemory"] = "redis"
 	inMemory, err := inmemory.NewInmemory(cfg)
@@ -105,7 +106,11 @@ func GetImageStoreInstance(cfg map[string]string, persistCfg map[string]string) 
 	return &ImageStore{storageType: "", inMemory: inMemory, persistentStorage: persistentStorage}, nil
 }
 
-// SetStorageType : This helps to set the storageType for Write Operation to store on Selected Memory.
+// SetStorageType sets the storageType for Write Operation to store on selected memory.
+//
+// It takes memory type as parameter.
+//
+// It returns an error incase setting storage type fails.
 func (pImageStore *ImageStore) SetStorageType(memoryType string) error {
 	memoryType = strings.ToLower(memoryType)
 
@@ -119,7 +124,11 @@ func (pImageStore *ImageStore) SetStorageType(memoryType string) error {
 	return errors.New("MemoryType: " + memoryType + " not supported")
 }
 
-// Read : This helps to read the stored data from memory. It accepts keyname as input.
+// Read is used to read the stored data from memory.
+//
+// It accepts keyname as input.
+//
+// It returns the image of consolidated keyname.
 func (pImageStore *ImageStore) Read(keyname string) (*io.Reader, error) {
 	if strings.Contains(keyname, inMemKeyPattern) {
 		return pImageStore.inMemory.Read(keyname)
@@ -129,7 +138,11 @@ func (pImageStore *ImageStore) Read(keyname string) (*io.Reader, error) {
 	return nil, errors.New("Unknown key pattern for key: " + keyname)
 }
 
-// Remove : This helps to remove the stored data from memory. It accepts keyname as input
+// Remove is used to remove the stored data from memory.
+//
+// It accepts keyname as input.
+//
+// It returns an error if remove fails.
 func (pImageStore *ImageStore) Remove(keyname string) error {
 
 	if strings.Contains(keyname, inMemKeyPattern) {
@@ -140,7 +153,11 @@ func (pImageStore *ImageStore) Remove(keyname string) error {
 	return errors.New("Unknown key pattern for key: " + keyname)
 }
 
-// Store : This helps to persist the data in selected memory based SetStorageType API. This Accepts value as input
+// Store  is used to store the data in selected memory based on SetStorageType API.
+//
+// It accepts value to be stored as parameter.
+//
+// It returns image handle of respective image stored.
 func (pImageStore *ImageStore) Store(value []byte) (string, error) {
 	if pImageStore.storageType == "inmemory" {
 		return pImageStore.inMemory.Store(value)

@@ -8,6 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+// Package client is the client library of ImageStore APIs
 package client
 
 import (
@@ -29,11 +30,17 @@ type GrpcClient struct {
 	is pb.IsClient
 }
 
+// chunkSize defines the size of chunks of image frame to be streamed
+// from server to client or vice-versa.
 const (
 	chunkSize = 4095 * 1024 // 4 MB
 )
 
-// NewImageStoreClient : This is the constructor to initialize the GrpcClient
+// NewImageStoreClient is the constructor to initialize the GrpcClient.
+//
+// It takes necessary certificates, hostname and port number as parameters.
+//
+// It returns a pointer to GrpcClient struct containing the gRPC interfaces.
 func NewImageStoreClient(RootCA string, ClientCert string, ClientKey string, hostname, port string) (*GrpcClient, error) {
 	addr := hostname + ":" + port
 	glog.Infof("Addr: %s", addr)
@@ -89,6 +96,11 @@ func NewImageStoreClient(RootCA string, ClientCert string, ClientKey string, hos
 
 // Read is a wrapper around gRPC go client implementation for
 // Read interface.
+//
+// It takes image handle of image to be read as a parameter.
+//
+// It returns the consolidated byte array of the image handle
+// provided as return type.
 func (pClient *GrpcClient) Read(imgHandle string) ([]byte, error) {
 	// Set the gRPC timeout
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -117,6 +129,11 @@ func (pClient *GrpcClient) Read(imgHandle string) ([]byte, error) {
 
 // Store is a wrapper around gRPC go client implementation for
 // Store interface.
+//
+// It takes a byte array to be stored in ImageStore and memory type
+// as parameter.
+//
+// It returns the image handle of the byte array stored.
 func (pClient *GrpcClient) Store(imgFrame []byte, memType string) (string, error) {
 	// Set the gRPC timeout
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -146,6 +163,11 @@ func (pClient *GrpcClient) Store(imgFrame []byte, memType string) (string, error
 
 // Remove is a wrapper around gRPC go client implementation for
 // Remove interface.
+//
+// It takes image handle of the image to be removed as a parameter.
+//
+// It returns the consolidated boolean of whether the image was
+// successfully removed.
 func (pClient *GrpcClient) Remove(imgHandle string) (bool, error) {
 	// Set the gRPC timeout
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)

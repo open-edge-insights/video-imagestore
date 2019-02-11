@@ -7,6 +7,8 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+
+// Package redis exports the Read, Remove & Store of APIs of Redis DB.
 package redis
 
 import (
@@ -21,12 +23,12 @@ import (
 
 var client *redis.Client
 
-// RedisConnect : This Struct used to have default variables used for redis. Also to comprise methods of redis to it's scope
+// RedisConnect is a struct used to have default variables used for redis and to comprise methods of redis to it's scope
 type RedisConnect struct {
 	retention string
 }
 
-// NewRedisConnect : This is a constructor function to connect redis database
+// NewRedisConnect is a constructor function to connect to redis database.
 func NewRedisConnect(config map[string]string) (*RedisConnect, error) {
 
 	client = redis.NewClient(&redis.Options{
@@ -38,7 +40,11 @@ func NewRedisConnect(config map[string]string) (*RedisConnect, error) {
 	return &RedisConnect{retention: config["Retention"]}, err
 }
 
-// Read : This helps to read the data from Redis, It Accepts keyname as input
+// Read is used to read the stored data from Redis.
+//
+// It accepts keyname as input.
+//
+// It returns the image of consolidated keyname.
 func (pRedisConnect *RedisConnect) Read(keyname string) (*io.Reader, error) {
 	binarydata, err := client.Get(keyname).Result()
 	if err == redis.Nil {
@@ -51,7 +57,11 @@ func (pRedisConnect *RedisConnect) Read(keyname string) (*io.Reader, error) {
 	return &data, nil
 }
 
-// Remove : This helps to remove the data from Redis, It Accepts keyname as input
+// Remove is used to remove the data from Redis.
+//
+// It accepts keyname as input.
+//
+// It returns an error if removing the consolidated image fails.
 func (pRedisConnect *RedisConnect) Remove(keyname string) error {
 	_, err := client.Del(keyname).Result()
 	if err != nil {
@@ -60,13 +70,17 @@ func (pRedisConnect *RedisConnect) Remove(keyname string) error {
 	return nil
 }
 
-// generateKeyName : This used to generate the keyname
+// generateKeyName is used to generate the keyname
 func (pRedisConnect *RedisConnect) generateKeyName() string {
 	keyname := "inmem_" + uuid.New().String()[:8]
 	return keyname
 }
 
-// Store : This helps to store the data in redis, It Accepts value as input
+// Store  is used to store the data in Redis.
+//
+// It accepts value to be stored as parameter.
+//
+// It returns image handle of respective image stored.
 func (pRedisConnect *RedisConnect) Store(value []byte) (string, error) {
 
 	ttl, err := time.ParseDuration(pRedisConnect.retention)
