@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-# Python grpc client implementation
+# === Python grpc client library ===
 
 import grpc
 import json
@@ -36,18 +36,30 @@ chunk_size = 4095*1024
 
 class GrpcImageStoreClient(object):
 
+    # === GrpcImageStoreClient constructor ===
     def __init__(self, clientCert, clientKey,
                  caCert,  hostname="localhost", port="50055"):
         """
-            GrpcImageStoreClient constructor.
-            Keyword Arguments:
-            clientCert - refers to the imagestore client certificate
-            clientKey - refers to the imagestore client key
-            caCert - refers to the ca certificate
-            hostname - refers to hostname/ip address of the m/c
-                       where DataAgent module of IEI is running
-                       (default: localhost)
-            port     - refers to gRPC port (default: 50055)
+        Parameters
+        ----------
+        1. **clientCert** : str
+            Refers to the imagestore client certificate
+        2. **clientKey** : str
+            Refers to the imagestore client key
+        3. **caCert** : str
+            Refers to the ca certificate
+        4. **hostname** : str
+            Refers to hostname/ip address of the m/c
+            where DataAgent module of IEI is running
+            (default: localhost)
+        5. **port** : str
+            Refers to gRPC port (default: 50055)
+
+        Returns
+        -------
+        1. stub
+            gRPC object which contains the required interfaces
+
         """
         self.hostname = hostname
         self.port = port
@@ -83,14 +95,22 @@ class GrpcImageStoreClient(object):
         channel = grpc.secure_channel(addr, credentials)
         self.stub = is_pb2_grpc.isStub(channel)
 
+    # === gRPC client library Read interface ===
     def Read(self, imgHandle):
         """
-            Read is a wrapper around gRPC python client implementation
-            for Read gRPC interface.
-            Arguments:
-            config(string): imgHandle
-            Returns:
-            The byte stream corresponding to the config value
+        Read is a wrapper around gRPC python client implementation
+        for Read gRPC interface.
+        
+        Parameters
+        ----------
+        1. **imgHandle** : str
+            Refers to the image handle to be fetched from ImageStore.
+
+        Returns
+        -------
+        1. bytes
+            byte stream of the corresponding image handle
+
         """
         log.debug("Inside Read() client wrapper...")
         response = self.stub.Read(is_pb2.ReadReq(readKeyname=imgHandle),
@@ -101,15 +121,24 @@ class GrpcImageStoreClient(object):
         log.debug("Sending the response to the caller...")
         return outputBytes
 
+    # === gRPC client library Store interface ===
     def Store(self, byteStream, memType):
         """
-            Store is a wrapper around gRPC python client implementation
-            for Store gRPC interface.
-            Arguments:
-            byteStream(byte[]): byte stream to be stored
-            memType: inmemory or persistence
-            Returns:
-            The imgHandle corresponding to the stored config value
+        Store is a wrapper around gRPC python client implementation
+        for Store gRPC interface.
+        
+        Parameters
+        ----------
+        1. **byteStream** : bytes
+            Refers to the image handle to be fetched from ImageStore.
+        2. **memType** : str
+            Refers to the memory type of where the image is to be stored.
+
+        Returns
+        -------
+        1. str
+            Image handle of byte stream stored.
+
         """
         log.debug("Inside Store() client wrapper...")
         data = self._chunkfunction(byteStream, memType)
@@ -117,14 +146,21 @@ class GrpcImageStoreClient(object):
         log.debug("Sending the response to the caller...")
         return response.storeKeyname
 
+    # === gRPC client library Remove interface ===
     def Remove(self, imgHandle):
         """
-            Remove is a wrapper around gRPC python client implementation
-            for Remove gRPC interface.
-            Arguments:
-            imgHandle(string): imgHandle
-            Returns:
-            None
+        Remove is a wrapper around gRPC python client implementation
+        for Remove gRPC interface.
+        
+        Parameters
+        ----------
+        1. **imgHandle** : str
+            Refers to the image handle to be removed from ImageStore.
+
+        Returns
+        -------
+        1. None
+
         """
         log.debug("Inside Remove() client wrapper...")
         response = self.stub.Remove(is_pb2.RemoveReq(remKeyname=imgHandle),
@@ -132,10 +168,24 @@ class GrpcImageStoreClient(object):
         log.debug("Sending the response to the caller...")
         return None
 
+    # === gRPC client library chunkfunction method ===
     def _chunkfunction(self, byteStream, memType):
         """
-            ChunkFunction is used to return the generator object which
-            is required by the gRPC store server interface.
+        ChunkFunction is used to return the generator object which
+        is required by the gRPC store server interface.
+        
+        Parameters
+        ----------
+        1. **byteStream** : bytes
+            Refers to the image frame to be stored in ImageStore.
+        2. **memType** : str
+            Refers to the memory type of where the image is to be stored.
+
+        Returns
+        -------
+        1. generator
+            Returns a generator of the byteStream object.
+
         """
         for i in range(0, len(byteStream), chunk_size):
             yield is_pb2.StoreReq(chunk=byteStream[i:i + chunk_size],

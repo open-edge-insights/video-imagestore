@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-# Python grpc client implementation
+# === Python grpc client test ===
 
 import logging
 import argparse
@@ -39,9 +39,19 @@ logging.basicConfig(level=logging.DEBUG,
                     '%(funcName)s : in line : [%(lineno)d] : %(message)s')
 log = logging.getLogger("GRPC_TEST")
 
-
+# === gRPC test library parse_args method ===
 def parse_args():
-    """Parse command line arguments
+    """
+    parse_args is used to parse the command line arguments
+        
+    Parameters
+    ----------
+    1. None
+
+    Returns
+    -------
+    1. Set of cli arguments
+
     """
     parser = argparse.ArgumentParser()
 
