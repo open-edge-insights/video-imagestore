@@ -15,6 +15,7 @@ import (
 	inmemory "IEdgeInsights/ImageStore/go/ImageStore/InMemory"
 	persistent "IEdgeInsights/ImageStore/go/ImageStore/Persistent"
 	"errors"
+	"io"
 	"strings"
 
 	"github.com/golang/glog"
@@ -119,13 +120,13 @@ func (pImageStore *ImageStore) SetStorageType(memoryType string) error {
 }
 
 // Read : This helps to read the stored data from memory. It accepts keyname as input.
-func (pImageStore *ImageStore) Read(keyname string) (string, error) {
+func (pImageStore *ImageStore) Read(keyname string) (*io.Reader, error) {
 	if strings.Contains(keyname, inMemKeyPattern) {
 		return pImageStore.inMemory.Read(keyname)
 	} else if strings.Contains(keyname, persistKeyPattern) {
 		return pImageStore.persistentStorage.Read(keyname)
 	}
-	return "", errors.New("Unknown key pattern for key: " + keyname)
+	return nil, errors.New("Unknown key pattern for key: " + keyname)
 }
 
 // Remove : This helps to remove the stored data from memory. It accepts keyname as input

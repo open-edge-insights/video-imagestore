@@ -11,6 +11,8 @@ package redis
 
 import (
 	"errors"
+	"io"
+	"strings"
 	"time"
 
 	"github.com/go-redis/redis"
@@ -37,14 +39,16 @@ func NewRedisConnect(config map[string]string) (*RedisConnect, error) {
 }
 
 // Read : This helps to read the data from Redis, It Accepts keyname as input
-func (pRedisConnect *RedisConnect) Read(keyname string) (string, error) {
+func (pRedisConnect *RedisConnect) Read(keyname string) (*io.Reader, error) {
 	binarydata, err := client.Get(keyname).Result()
 	if err == redis.Nil {
-		return "", errors.New("Key Not Found")
+		return nil, errors.New("Key Not Found")
 	} else if err != nil {
-		return "", err
+		return nil, err
 	}
-	return binarydata, err
+	outputStr := strings.NewReader(binarydata)
+	data := io.Reader(outputStr)
+	return &data, nil
 }
 
 // Remove : This helps to remove the data from Redis, It Accepts keyname as input

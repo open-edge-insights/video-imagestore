@@ -24,6 +24,7 @@ package Persistent
 import (
 	"IEdgeInsights/ImageStore/go/ImageStore/Persistent/minio"
 	"errors"
+	"io"
 	"strings"
 
 	"github.com/golang/glog"
@@ -32,7 +33,7 @@ import (
 // Generic interface for underlying storage technologies to implement.
 type Storage interface {
 	// Read the given key from stroage
-	Read(keyname string) (string, error)
+	Read(keyname string) (*io.Reader, error)
 
 	// Remove the given key from the storage
 	Remove(keyname string) error
@@ -80,7 +81,7 @@ func GetConfgKey(storageType string) (string, error) {
 
 // Retrieve object from the image store with the given object name
 // (i.e. keyname)
-func (pStorage *Persistent) Read(keyname string) (string, error) {
+func (pStorage *Persistent) Read(keyname string) (*io.Reader, error) {
 	return pStorage.storage.Read(keyname)
 }
 

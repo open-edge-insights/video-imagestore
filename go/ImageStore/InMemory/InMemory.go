@@ -10,8 +10,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package InMemory
 
 import (
-	"errors"
 	"IEdgeInsights/ImageStore/go/ImageStore/InMemory/redis"
+	"errors"
+	"io"
 
 	"github.com/golang/glog"
 )
@@ -46,7 +47,7 @@ func NewInmemory(config map[string]string) (*InMemory, error) {
 }
 
 // Read : This helps to read the data from InMemory, It Accepts keyname as input
-func (pInMemory *InMemory) Read(keyname string) (string, error) {
+func (pInMemory *InMemory) Read(keyname string) (*io.Reader, error) {
 	return pInMemory.redisConnect.Read(keyname)
 }
 

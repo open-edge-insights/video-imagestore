@@ -129,22 +129,15 @@ func NewMinioStorage(config map[string]string) (*MinioStorage, error) {
 }
 
 // Retrieve the object with the given name from Minio
-func (pMinioStorage *MinioStorage) Read(keyname string) (string, error) {
+func (pMinioStorage *MinioStorage) Read(keyname string) (*io.Reader, error) {
 	// Get the object from the store
 	obj, err := pMinioStorage.client.GetObject(
 		bucketName, keyname, minio.GetObjectOptions{})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-
-	data := bytes.NewBuffer(nil)
-
-	if _, err = io.Copy(data, obj); err != nil {
-		glog.Errorf("Failed to retrieve data from Minio: %v", err)
-		return "", err
-	}
-
-	return data.String(), nil
+	data := io.Reader(obj)
+	return &data, nil
 }
 
 // Remove the objec with the given name from Minio

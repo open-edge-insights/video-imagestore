@@ -28,7 +28,10 @@ ImageStore Module provides APIs for image read, store and remove in both in-memo
                             --port 50055 \
                             --client-cert /etc/ssl/imagestore/imagestore_client_certificate.pem \
                             --client-key /etc/ssl/imagestore/imagestore_client_key.pem \
-                            --ca-cert /etc/ssl/ca/ca_certificate.pem
+                            --ca-cert /etc/ssl/ca/ca_certificate.pem \
+                            --input_file <Path to input file> \
+                            --output_file <Path to output file>
+
 ```
 
 > **Note**: Right now, the IEI ImageStore gRPC server runs at port `50055`. If one wish to change this, ensure that IEI's ImageStore gRPC server

@@ -65,7 +65,6 @@ func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string
 		gRPCImageStoreHost = ipAddr[0].String()
 	}
 
-
 	defer glog.Flush()
 	if len(os.Args) < 1 {
 		glog.Infof("No args passed.")
@@ -181,20 +180,27 @@ func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string
 func (s *IsServer) Read(in *pb.ReadReq, srv pb.Is_ReadServer) error {
 	output, err := s.is.Read(in.ReadKeyname)
 	if err != nil {
-		glog.Infof("Read failed")
+		glog.Errorf("Read failed: %v", err)
 		return err
 	}
-	outputtwo := []byte(output)
+
 	chnk := &pb.ReadResp{}
-	//Iterating through the ByteArray for every 64 KB of chunks
-	for currentByte := 0; currentByte < len(outputtwo); currentByte += chunkSize {
-		if currentByte+chunkSize > len(outputtwo) {
-			chnk.Chunk = outputtwo[currentByte:len(outputtwo)]
-		} else {
-			chnk.Chunk = outputtwo[currentByte : currentByte+chunkSize]
+	outputByteArr := make([]byte, chunkSize)
+	for {
+		n, err := (*output).Read(outputByteArr)
+		if err != nil {
+			if err == io.EOF {
+				// This is to send the last remaining chunk
+				chnk.Chunk = outputByteArr[:n]
+				if err := srv.Send(chnk); err != nil {
+					return err
+				}
+				break
+			}
+			glog.Errorf("Error: %v", err)
 		}
+		chnk.Chunk = outputByteArr[:n]
 		if err := srv.Send(chnk); err != nil {
-			outputtwo = nil
 			return err
 		}
 	}

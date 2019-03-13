@@ -25,9 +25,11 @@ SOFTWARE.
 import logging
 import argparse
 import hashlib
+import datetime
 import time
 import sys
 import os
+import time
 from ImageStore.client.py.client import \
     GrpcImageStoreClient
 
@@ -58,19 +60,69 @@ def parse_args():
     parser.add_argument('--client-cert', dest='client_cert',
                         help='Client_Cert')
 
+    parser.add_argument('--input_file', help='input image file')
+
+    parser.add_argument('--output_file', help='output image file')
+
     return parser.parse_args()
 
-if __name__ == '__main__':
+def test_case(imgHandle):
 
     args = parse_args()
     client = GrpcImageStoreClient(args.client_cert, args.client_key,
                                   args.ca_cert, hostname=args.hostname)
+    
+    inputFile = args.input_file
+    outputFile = args.output_file
+
+    inputBytes = None
+    with open(inputFile, "rb") as f:
+            inputBytes = f.read()
 
     # Testing Store("value") gRPC call
-    keyname = client.Store(bytes(0x00), 'inmemory')
+    keyname = client.Store(inputBytes, imgHandle)
+    totalTime = 0.0
 
     # Testing Read("imgHandle") gRPC call
-    config = client.Read(keyname)
+    iter1 = 20
+    for i in range(iter1):
+        start = time.time()
+        outputBytes = client.Read(keyname)
+        end = time.time()
+        timeTaken = end - start
+        log.info("Time taken for one read call: %f secs", timeTaken)
+        totalTime += timeTaken
+
+    log.info("Average time taken for Read() %d calls: %f secs",
+             iter1, totalTime / iter1)
+
+    log.info("Writing the binary data received into a file: %s",
+                 outputFile)
+    with open(outputFile, "wb") as outfile:
+        outfile.write(outputBytes)
+
+    digests = []
+    for filename in [inputFile, outputFile]:
+        hasher = hashlib.md5()
+        with open(filename, 'rb') as f:
+            buf = f.read()
+            hasher.update(buf)
+            a = hasher.hexdigest()
+            digests.append(a)
+            log.info("Hash for filename: %s is %s", filename, a)
+
+    if digests[0] == digests[1]:
+        log.info("md5sum for the files match")
+    else:
+        log.info("md5sum for the files doesn't match")
 
     # Testing Remove("imgHandle") gRPC call
     client.Remove(keyname)
+
+if __name__ == '__main__':
+
+    # Testing Redis gRPC calls
+    test_case('inmemory')
+
+    # Testing Minio gRPC calls
+    test_case('persistent')
