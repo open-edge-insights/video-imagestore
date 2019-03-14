@@ -35,6 +35,8 @@ using ImageStore::ReadReq;
 using ImageStore::ReadResp;
 using ImageStore::RemoveReq;
 using ImageStore::RemoveResp;
+using ImageStore::StoreReq;
+using ImageStore::StoreResp;
 using ImageStore::is;
 
 class ImageStoreClient{
@@ -43,13 +45,13 @@ class ImageStoreClient{
         : _stub(is::NewStub(channel)) {}
 
   /*
-              Read is a wrapper around gRPC C++ client implementation
-              for Read gRPC interface.
-              Arguments:
-              imgHandle(string): key for ImageStore
-              Returns:
-              The consolidated string(value from ImageStore) associated with
-              that imgHandle
+      Read is a wrapper around gRPC C++ client implementation
+      for Read gRPC interface.
+      Arguments:
+      imgHandle(string): key for ImageStore
+      Returns:
+      The consolidated string(value from ImageStore) associated with
+      that imgHandle
   */
   std::string Read(const std::string& imgHandle)
   {
@@ -74,13 +76,13 @@ class ImageStoreClient{
   }
 
   /*
-              Remove is a wrapper around gRPC C++ client implementation
-              for Remove gRPC interface.
-              Arguments:
-              imgHandle(string): key for ImageStore
-              Returns:
-              The consolidated boolean if whether the consolidated
-              value was removed.
+      Remove is a wrapper around gRPC C++ client implementation
+      for Remove gRPC interface.
+      Arguments:
+      imgHandle(string): key for ImageStore
+      Returns:
+      The consolidated boolean if whether the consolidated
+      value was removed.
   */
   bool Remove(const std::string& imgHandle)
   {
@@ -99,6 +101,35 @@ class ImageStoreClient{
         std::cout << "Remove failed." << std::endl;
       }
       return response;
+  }
+
+  /*
+      Store is a wrapper around gRPC C++ client implementation
+      for Store gRPC interface.
+      Arguments:
+      memoryType(string): memoryType for ImageStore
+      imgFrame(string): image to be stored in ImageStore
+      Returns:
+      The consolidated imgHandle string of imgFrame stored.
+  */
+  std::string Store(const std::string& memoryType, const std::string& imgFrame)
+  {
+      StoreReq request;
+      StoreResp reply;
+      ClientContext context;
+      request.set_memorytype(memoryType);
+      request.set_chunk(imgFrame);
+      std::unique_ptr<ClientWriter<StoreReq>> writer(_stub->Store(&context, &reply));
+      if (!writer->Write(request)) {
+        std::cout << "Store failed." << endl;
+        exit(1);
+      }
+      writer->WritesDone();
+      Status status = writer->Finish();
+      if (status.ok()) {
+          std::cout << "Store succeeded." << std::endl;
+          return reply.storekeyname();
+      }
   }
 
   private:

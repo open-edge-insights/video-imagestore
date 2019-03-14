@@ -10,8 +10,8 @@ CA_CERTS = /etc/ssl/ca
 # ImageStore hostname/port
 HOST = localhost
 PORT = 50055
-IMG_HANDLE = "persist_47554d01" # inmem_ and persist_ image handles
-OUTPUT_FILE = test.png
+INPUT_FILE = test.png
+OUTPUT_FILE = test_output.png
 
 CPPFLAGS += `pkg-config --cflags protobuf grpc`
 CXXFLAGS += -std=c++11
@@ -31,7 +31,7 @@ clientTest:	clean system-check ImageStore.pb.o ImageStore.grpc.pb.o clientTest.o
 			./clientTest $(HOST) $(PORT) $(SERVER_CERTS)/imagestore_client_certificate.pem \
 			                             $(SERVER_CERTS)/imagestore_client_key.pem \
 										 $(CA_CERTS)/ca_certificate.pem \
-										 $(IMG_HANDLE) \
+										 $(INPUT_FILE) \
 										 $(OUTPUT_FILE)
 
 ImageStore.pb.o:

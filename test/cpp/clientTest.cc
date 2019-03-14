@@ -54,18 +54,18 @@ void read(const std::string& filename, std::string& data)
 	return;
 }
 
-int main(int argc, char** argv) {
+void test_case(int argc, char** argv, const std::string& imgHandle)
+{
   ReadReq request;
   ReadResp reply;
   std::string root;
   std::string key;
   std::string cert;
   int exitCondition = 1;
-  int returnCondition = 0;
 
   if(argc < 7)
   {
-    cout << "Usage: ./clientTest <imgstore_host> <imgstore_port> <img_client_cert> <img_client_key> <ca_cert> <img_handle> <output_file" << endl;
+    cout << "Usage: ./clientTest <imgstore_host> <imgstore_port> <img_client_cert> <img_client_key> <ca_cert> <input_file> <output_file>" << endl;
     exit(exitCondition);
   }
 
@@ -88,14 +88,48 @@ int main(int argc, char** argv) {
   ImageStoreClient gclient(grpc::CreateChannel(endpoint,
                         grpc::SslCredentials(opts)));
 
+  std::string storedata;
+  std::ifstream in;
+  in.read(argv[6], std::ios::binary);
+  in >> storedata;
+
+  std::cout << "-------------- Calling Store --------------" << std::endl;
+  std::string keyname = gclient.Store(imgHandle, storedata);
+  cout << "Image handle:" << keyname << endl ;
+
+  int iterations = 20;
+  float totalTimeTaken = 0.0;
+
   std::cout << "-------------- Calling Read --------------" << std::endl;
-  cout << "Image handle received from command line:" <<  argv[6] << endl;
-  std::string response = gclient.Read(argv[6]);
-  std::ofstream out;
-  out.open(argv[7], std::ios::binary);
-  out << response;
-  out.close();
-  bool remove_response = gclient.Remove(argv[6]);
+  for(int i = 0; i < iterations; i++) {
+
+    const clock_t begin_time = clock();
+    std::string response = gclient.Read(keyname);
+    const clock_t end_time = clock();
+    float timeTaken = float(end_time - begin_time) / CLOCKS_PER_SEC;
+    std::cout << "Time taken for one read call:" << timeTaken << std::endl;
+    totalTimeTaken += timeTaken;
+    std::ofstream out;
+    out.open(argv[7], std::ios::binary);
+    out << response;
+    out.close();
+  }
+  std::cout << "Total time taken for "+std::to_string(iterations)+" read calls:" << totalTimeTaken / iterations << std::endl;
+  
+  std::cout << "-------------- Calling Remove --------------" << std::endl;
+  bool remove_response = gclient.Remove(keyname);
   cout << "Remove status :" << remove_response << endl;
+  return;
+}
+
+int main(int argc, char** argv) {
+  int returnCondition = 0;
+
+  // Testing redis gRPC calls
+  test_case(argc, argv, "inmemory");
+
+  // Testing minio gRPC calls
+  test_case(argc, argv, "persistent");
+
   return returnCondition;
 }
