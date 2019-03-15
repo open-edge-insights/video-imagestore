@@ -29,6 +29,16 @@ type RedisConnect struct {
 }
 
 // NewRedisConnect is a constructor function to connect to redis database.
+//
+// Parameters:
+// 1. config : map[string]string
+//    Refers to the redis config.
+//
+// Returns:
+// 1. *RedisConnect
+//    Returns the RedisConnect instance
+// 2. error
+//    Returns an error message if initialization fails.
 func NewRedisConnect(config map[string]string) (*RedisConnect, error) {
 
 	client = redis.NewClient(&redis.Options{
@@ -40,11 +50,17 @@ func NewRedisConnect(config map[string]string) (*RedisConnect, error) {
 	return &RedisConnect{retention: config["Retention"]}, err
 }
 
-// Read is used to read the stored data from Redis.
+// Read is used to read the data from Redis.
 //
-// It accepts keyname as input.
+// Parameters:
+// 1. keyname : string
+//    Refers to the image handle of the image to be read.
 //
-// It returns the image of consolidated keyname.
+// Returns:
+// 1. string
+//    Returns the image of the consolidated image handle.
+// 2. error
+//    Returns an error message if read fails.
 func (pRedisConnect *RedisConnect) Read(keyname string) (*io.Reader, error) {
 	binarydata, err := client.Get(keyname).Result()
 	if err == redis.Nil {
@@ -57,11 +73,15 @@ func (pRedisConnect *RedisConnect) Read(keyname string) (*io.Reader, error) {
 	return &data, nil
 }
 
-// Remove is used to remove the data from Redis.
+// Remove is used to remove the stored data from Redis.
 //
-// It accepts keyname as input.
+// Parameters:
+// 1. keyname : string
+//    Refers to the image handle of the image to be removed.
 //
-// It returns an error if removing the consolidated image fails.
+// Returns:
+// 1. error
+//    Returns an error message if remove fails.
 func (pRedisConnect *RedisConnect) Remove(keyname string) error {
 	_, err := client.Del(keyname).Result()
 	if err != nil {
@@ -78,9 +98,15 @@ func (pRedisConnect *RedisConnect) generateKeyName() string {
 
 // Store  is used to store the data in Redis.
 //
-// It accepts value to be stored as parameter.
+// Parameters:
+// 1. value : []byte
+//    Refers to the image buffer to be stored in ImageStore.
 //
-// It returns image handle of respective image stored.
+// Returns:
+// 1. string
+//    Returns the image handle of the image stored.
+// 2. error
+//    Returns an error message if store fails.
 func (pRedisConnect *RedisConnect) Store(value []byte) (string, error) {
 
 	ttl, err := time.ParseDuration(pRedisConnect.retention)

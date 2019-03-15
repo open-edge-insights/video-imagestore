@@ -41,18 +41,7 @@ log = logging.getLogger("GRPC_TEST")
 
 # === gRPC test library parse_args method ===
 def parse_args():
-    """
-    parse_args is used to parse the command line arguments
-        
-    Parameters
-    ----------
-    1. None
 
-    Returns
-    -------
-    1. Set of cli arguments
-
-    """
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--hostname', dest='hostname',

@@ -130,9 +130,12 @@ class GrpcImageStoreClient(object):
         Parameters
         ----------
         1. **byteStream** : bytes
-            Refers to the image handle to be fetched from ImageStore.
+            Refers to the image handle of the image to be fetched 
+            from ImageStore.
         2. **memType** : str
             Refers to the memory type of where the image is to be stored.
+            It can either be inmemory or persistent to store the buffer
+            in Redis or Minio respectively.
 
         Returns
         -------
@@ -159,14 +162,15 @@ class GrpcImageStoreClient(object):
 
         Returns
         -------
-        1. None
+        1. Returns true if successful and throws an exception with 
+           error if remove fails.
 
         """
         log.debug("Inside Remove() client wrapper...")
         response = self.stub.Remove(is_pb2.RemoveReq(remKeyname=imgHandle),
                                     timeout=1000)
         log.debug("Sending the response to the caller...")
-        return None
+        return True
 
     # === gRPC client library chunkfunction method ===
     def _chunkfunction(self, byteStream, memType):

@@ -54,6 +54,18 @@ type Persistent struct {
 const MINIO string = "minio"
 
 // NewPersistent is used to initialize the connection based on DataAgent settings
+//
+// Parameters:
+// 1. storageType : string
+//    Returns the Imagestore storage type.
+// 2. config : map[string]string
+//    Refers to the persistent config.
+//
+// Returns:
+// 1. *Persistent
+//    Returns the Persistent instance
+// 2. error
+//    Returns an error message if initialization fails.
 func NewPersistent(storageType string, config map[string]string) (*Persistent, error) {
 	if storageType == MINIO {
 		storage, err := minio.NewMinioStorage(config)
@@ -71,7 +83,16 @@ func NewPersistent(storageType string, config map[string]string) (*Persistent, e
 	}
 }
 
-// GetConfgKey is used to get the key to retrieve the configuration from gRPC
+// GetConfgKey is used to get the key to retrieve the configuration from gRPC.
+// Parameters:
+// 1. storageType : string
+//    Returns the Imagestore storage type.
+//
+// Returns:
+// 1. string
+//    Returns consolidated config key based on storage type.
+// 2. error
+//    Returns an error message if fetching config fails.
 func GetConfgKey(storageType string) (string, error) {
 	storageType = strings.ToLower(storageType)
 
@@ -84,27 +105,43 @@ func GetConfgKey(storageType string) (string, error) {
 
 // Read is used to read the data from Persistent memory.
 //
-// It accepts keyname as input.
+// Parameters:
+// 1. keyname : string
+//    Refers to the image handle of the image to be read.
 //
-// It returns the image of the consolidated keyname.
+// Returns:
+// 1. string
+//    Returns the image of the consolidated image handle.
+// 2. error
+//    Returns an error message if read fails.
 func (pStorage *Persistent) Read(keyname string) (*io.Reader, error) {
 	return pStorage.storage.Read(keyname)
 }
 
-// Remove is used to remove the data from Persistent memory.
+// Remove is used to remove the stored data from Persistent memory.
 //
-// It accepts keyname as input.
+// Parameters:
+// 1. keyname : string
+//    Refers to the image handle of the image to be removed.
 //
-// It returns an error if removing the consolidated image fails.
+// Returns:
+// 1. error
+//    Returns an error message if remove fails.
 func (pStorage *Persistent) Remove(keyname string) error {
 	return pStorage.storage.Remove(keyname)
 }
 
-// Store is used to store the data in Persistent memory.
+// Store  is used to store the data in Persistent memory.
 //
-// It accepts value of image to be stored as input.
+// Parameters:
+// 1. data : []byte
+//    Refers to the image buffer to be stored in ImageStore.
 //
-// It returns image handle of image stored.
+// Returns:
+// 1. string
+//    Returns the image handle of the image stored.
+// 2. error
+//    Returns an error message if store fails.
 func (pStorage *Persistent) Store(data []byte) (string, error) {
 	return pStorage.storage.Store(data)
 }

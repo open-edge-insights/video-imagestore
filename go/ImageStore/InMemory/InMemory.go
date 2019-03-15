@@ -28,7 +28,17 @@ type InMemory struct {
 // memoryDB is used for module level check with memory type
 const memoryDB string = "redis"
 
-// NewInmemory is used to initialize the connection based on DataAgent settings
+// NewInmemory is used to initialize the connection based on DataAgent settings.
+//
+// Parameters:
+// 1. config : map[string]string
+//    Refers to the ImageStore config
+//
+// Returns:
+// 1. *InMemory
+//    Returns the InMemory instance
+// 2. error
+//    Returns an error message if initialization fails.
 func NewInmemory(config map[string]string) (*InMemory, error) {
 	inMemoryType := config["InMemory"]
 	if memoryDB == inMemoryType {
@@ -50,27 +60,43 @@ func NewInmemory(config map[string]string) (*InMemory, error) {
 
 // Read is used to read the data from InMemory.
 //
-// It accepts keyname as input.
+// Parameters:
+// 1. keyname : string
+//    Refers to the image handle of the image to be read.
 //
-// It returns the image of the consolidated keyname.
+// Returns:
+// 1. string
+//    Returns the image of the consolidated image handle.
+// 2. error
+//    Returns an error message if read fails.
 func (pInMemory *InMemory) Read(keyname string) (*io.Reader, error) {
 	return pInMemory.redisConnect.Read(keyname)
 }
 
-// Remove is used to remove the data from InMemory.
+// Remove is used to remove the stored data from InMemory.
 //
-// It accepts keyname as input.
+// Parameters:
+// 1. keyname : string
+//    Refers to the image handle of the image to be removed.
 //
-// It returns an error if removing the consolidated image fails.
+// Returns:
+// 1. error
+//    Returns an error message if remove fails.
 func (pInMemory *InMemory) Remove(keyname string) error {
 	return pInMemory.redisConnect.Remove(keyname)
 }
 
-// Store is used to store the data in InMemory.
+// Store  is used to store the data in InMemory.
 //
-// It accepts value of image to be stored as input.
+// Parameters:
+// 1. value : []byte
+//    Refers to the image buffer to be stored in ImageStore.
 //
-// It returns image handle of image stored.
+// Returns:
+// 1. string
+//    Returns the image handle of the image stored.
+// 2. error
+//    Returns an error message if store fails.
 func (pInMemory *InMemory) Store(value []byte) (string, error) {
 	return pInMemory.redisConnect.Store(value)
 }

@@ -38,9 +38,25 @@ const (
 
 // NewImageStoreClient is the constructor to initialize the GrpcClient.
 //
-// It takes necessary certificates, hostname and port number as parameters.
+// Parameters:
+// 1. RootCA : string
+//    Refers to the ca certificate.
+// 2. ClientCert : string
+//    Refers to the imagestore client certificate.
+// 3. ClientKey : string
+//    Refers to the imagestore client key.
+// 4. hostname : string
+//    Refers to hostname/ip address of the m/c
+//    where DataAgent module of IEI is running
+//    (default: localhost).
+// 5. port : string
+//    Refers to gRPC port (default: 50055).
 //
-// It returns a pointer to GrpcClient struct containing the gRPC interfaces.
+// Returns:
+// 1. *GrpcClient
+//    Returns the GrpcClient instance.
+// 2. error
+//    Returns an error message if initialization fails.
 func NewImageStoreClient(RootCA string, ClientCert string, ClientKey string, hostname, port string) (*GrpcClient, error) {
 	addr := hostname + ":" + port
 	glog.Infof("Addr: %s", addr)
@@ -97,10 +113,15 @@ func NewImageStoreClient(RootCA string, ClientCert string, ClientKey string, hos
 // Read is a wrapper around gRPC go client implementation for
 // Read interface.
 //
-// It takes image handle of image to be read as a parameter.
+// Parameters:
+// 1. imgHandle : string
+//    It takes image handle of image to be read as a parameter.
 //
-// It returns the consolidated byte array of the image handle
-// provided as return type.
+// Returns:
+// 1. []byte
+//    Returns the consolidated byte array of the image handle
+// 2. error
+//    Returns an error message if read fails.
 func (pClient *GrpcClient) Read(imgHandle string) ([]byte, error) {
 	// Set the gRPC timeout
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -130,10 +151,20 @@ func (pClient *GrpcClient) Read(imgHandle string) ([]byte, error) {
 // Store is a wrapper around gRPC go client implementation for
 // Store interface.
 //
-// It takes a byte array to be stored in ImageStore and memory type
-// as parameter.
+// Parameters:
+// 1. imgFrame : []byte
+//    Refers to the image handle of the image to be fetched
+//    from ImageStore.
+// 2. memType  : string
+//    Refers to the memory type of where the image is to be stored.
+//    It can either be inmemory or persistent to store the buffer
+//    in Redis or Minio respectively.
 //
-// It returns the image handle of the byte array stored.
+// Returns:
+// 1. string
+//    Returns image handle of byte stream stored.
+// 2. error
+//    Returns an error message if store fails.
 func (pClient *GrpcClient) Store(imgFrame []byte, memType string) (string, error) {
 	// Set the gRPC timeout
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -164,10 +195,17 @@ func (pClient *GrpcClient) Store(imgFrame []byte, memType string) (string, error
 // Remove is a wrapper around gRPC go client implementation for
 // Remove interface.
 //
-// It takes image handle of the image to be removed as a parameter.
+// Parameters:
+// 1. imgHandle : string
+//    Refers to the image handle to be removed from ImageStore.
+//    It takes image handle of the image to be removed as a parameter.
 //
-// It returns the consolidated boolean of whether the image was
-// successfully removed.
+// Returns:
+// 1. bool
+//    Returns the consolidated boolean of whether the image was
+//    successfully removed.
+// 2. error
+//    Returns an error message if remove fails.
 func (pClient *GrpcClient) Remove(imgHandle string) (bool, error) {
 	// Set the gRPC timeout
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)

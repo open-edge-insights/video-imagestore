@@ -80,7 +80,11 @@ func main() {
 	glog.Infof("**************Exiting**************")
 }
 
-// StartRedis starts redis server
+// StartRedis starts the redis server
+//
+// Parameters:
+// 1. redisConfigMap : map[string]string
+//    Refers to the redis config.
 func StartRedis(redisConfigMap map[string]string) {
 	redisPort := os.Getenv("REDIS_PORT")
 	cmd := exec.Command("redis-server", "--port", redisPort, "--requirepass", redisConfigMap["Password"])
@@ -93,9 +97,9 @@ func StartRedis(redisConfigMap map[string]string) {
 
 // StartMinio starts the minio server.
 //
-// It takes the map of minioConfig as a parameter.
-//
-// It starts the minio server and has no return type.
+// Parameters:
+// 1. minioConfigMap : map[string]string
+//    Refers to the minio config.
 func StartMinio(minioConfigMap map[string]string) {
 	os.Setenv("MINIO_ACCESS_KEY", minioConfigMap["AccessKey"])
 	os.Setenv("MINIO_SECRET_KEY", minioConfigMap["SecretKey"])
@@ -113,6 +117,10 @@ func StartMinio(minioConfigMap map[string]string) {
 }
 
 // missingKeyError is a helper method to report a missing key in Minio config
+//
+// Parameters:
+// 1. key : string
+//    Refers to Image handle.
 func missingKeyError(key string) {
 	msg := "Minio config missing key: " + key
 	glog.Errorf(msg)
@@ -120,6 +128,10 @@ func missingKeyError(key string) {
 }
 
 // StartMinioRetentionPolicy cleans up the ImageStore
+//
+// Parameters:
+// 1. config : map[string]string
+//    Refers to the minio config
 func StartMinioRetentionPolicy(config map[string]string) {
 	glog.Infof("Running minio retention policy")
 

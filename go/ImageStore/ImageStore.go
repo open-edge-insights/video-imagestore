@@ -43,6 +43,12 @@ const (
 )
 
 // NewImageStore is the constructor type method which initialises the object for ImageStore Operations.
+//
+// Returns:
+// 1. ImageStore object
+//    Returns an ImageStore object with config.
+// 2. error
+//    Returns an error if initialization fails.
 func NewImageStore() (*ImageStore, error) {
 
 	//TODO: This call is failing when trying to connect to gRPC server running in the same container.
@@ -91,6 +97,18 @@ func NewImageStore() (*ImageStore, error) {
 
 // GetImageStoreInstance is the constructor type method which takes the image store config
 // and initialises the Object for ImageStore Operations.
+//
+// Parameters:
+// 1. cfg : map[string]string
+//    Refers to the redis(inmemory) config
+// 2. persistCfg : map[string]string
+//    Refers to the minio(persistent) config
+//
+// Returns:
+// 1. *ImageStore
+//    Returns the ImageStore instance
+// 2. error
+//    Returns an error message if initialization fails.
 func GetImageStoreInstance(cfg map[string]string, persistCfg map[string]string) (*ImageStore, error) {
 	cfg["InMemory"] = "redis"
 	inMemory, err := inmemory.NewInmemory(cfg)
@@ -108,9 +126,13 @@ func GetImageStoreInstance(cfg map[string]string, persistCfg map[string]string) 
 
 // SetStorageType sets the storageType for Write Operation to store on selected memory.
 //
-// It takes memory type as parameter.
+// Parameters:
+// 1. memoryType : string
+//    Refers to the storage type.
 //
-// It returns an error incase setting storage type fails.
+// Returns:
+// 1. error
+//    Returns an error message if initialization fails.
 func (pImageStore *ImageStore) SetStorageType(memoryType string) error {
 	memoryType = strings.ToLower(memoryType)
 
@@ -126,9 +148,15 @@ func (pImageStore *ImageStore) SetStorageType(memoryType string) error {
 
 // Read is used to read the stored data from memory.
 //
-// It accepts keyname as input.
+// Parameters:
+// 1. keyname : string
+//    Refers to the image handle of the image to be read.
 //
-// It returns the image of consolidated keyname.
+// Returns:
+// 1. string
+//    Returns the image of the consolidated image handle.
+// 2. error
+//    Returns an error message if read fails.
 func (pImageStore *ImageStore) Read(keyname string) (*io.Reader, error) {
 	if strings.Contains(keyname, inMemKeyPattern) {
 		return pImageStore.inMemory.Read(keyname)
@@ -140,9 +168,13 @@ func (pImageStore *ImageStore) Read(keyname string) (*io.Reader, error) {
 
 // Remove is used to remove the stored data from memory.
 //
-// It accepts keyname as input.
+// Parameters:
+// 1. keyname : string
+//    Refers to the image handle of the image to be removed.
 //
-// It returns an error if remove fails.
+// Returns:
+// 1. error
+//    Returns an error message if remove fails.
 func (pImageStore *ImageStore) Remove(keyname string) error {
 
 	if strings.Contains(keyname, inMemKeyPattern) {
@@ -155,9 +187,15 @@ func (pImageStore *ImageStore) Remove(keyname string) error {
 
 // Store  is used to store the data in selected memory based on SetStorageType API.
 //
-// It accepts value to be stored as parameter.
+// Parameters:
+// 1. value : []byte
+//    Refers to the image buffer to be stored in ImageStore.
 //
-// It returns image handle of respective image stored.
+// Returns:
+// 1. string
+//    Returns the image handle of the image stored.
+// 2. error
+//    Returns an error message if store fails.
 func (pImageStore *ImageStore) Store(value []byte) (string, error) {
 	if pImageStore.storageType == "inmemory" {
 		return pImageStore.inMemory.Store(value)

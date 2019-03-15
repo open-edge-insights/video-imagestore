@@ -57,6 +57,11 @@ type IsServer struct {
 }
 
 // StartGrpcServer is used to start the ImageStore grpc server
+// Parameters:
+// 1. redisConfigMap : map[string]string
+//    Refers to the ImageStore redis configurations
+// 2. minioConfigMap : map[string]string
+//    Refers to the ImageStore minio configurations
 func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string]string) {
 
 	ipAddr, err := net.LookupIP("ia_imagestore")
@@ -180,10 +185,15 @@ func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string
 // Read is a wrapper around gRPC go server implementation for
 // Read interface.
 //
-// It takes image handle of image to be read as a parameter.
+// Parameters:
+// 1. in : Protobuf ReadReq struct
+//    Refers to the protobuf struct comprising the ImageStore server Read APIs
+// 2. srv : Protobuf Is_ReadServer interface
+//    Refers to the protobuf interface comprising the ImageStore server Read APIs
 //
-// It streams the consolidated byte array of the image handle provided
-// and returns an error if read fails.
+// Returns:
+// 1. error
+//    An error message if read fails.
 func (s *IsServer) Read(in *pb.ReadReq, srv pb.Is_ReadServer) error {
 	output, err := s.is.Read(in.ReadKeyname)
 	if err != nil {
@@ -217,11 +227,13 @@ func (s *IsServer) Read(in *pb.ReadReq, srv pb.Is_ReadServer) error {
 // Store is a wrapper around gRPC go server implementation for
 // Store interface.
 //
-// It takes a byte array to be stored in ImageStore and memory type
-// as parameter from client library.
+// Parameters:
+// 1. rcv : Protobuf Is_StoreServer interface
+//    Refers to the protobuf interface comprising the ImageStore server Store APIs
 //
-// It returns the image handle of the byte array stored and an error
-// if store fails.
+// Returns:
+// 1. error
+//    An error message if store fails.
 func (s *IsServer) Store(rcv pb.Is_StoreServer) error {
 	blob := []byte{}
 	memType := ""
@@ -253,10 +265,15 @@ func (s *IsServer) Store(rcv pb.Is_StoreServer) error {
 // Remove is a wrapper around gRPC go server implementation for
 // Remove interface.
 //
-// It takes image handle of the image to be removed as a parameter.
+// Parameters:
+// 1. ctx : context
+//    Refers to the server context
 //
-// It returns the consolidated value of whether the image was
-// successfully removed and an error if remove fails.
+// Returns:
+// 1. pb.RemoveResp
+//    Refers to the response struct containing the response message
+// 2. error
+//    An error message if remove fails.
 func (s *IsServer) Remove(ctx context.Context, in *pb.RemoveReq) (*pb.RemoveResp, error) {
 	errr := s.is.Remove(in.RemKeyname)
 	if errr != nil {
@@ -266,6 +283,10 @@ func (s *IsServer) Remove(ctx context.Context, in *pb.RemoveReq) (*pb.RemoveResp
 }
 
 // CloseGrpcServer closes gRPC server
+//
+// Parameters:
+// 1. done : chan bool
+//    Refers to the channel used to close the server
 func CloseGrpcServer(done chan bool) {
 	done <- true
 }
