@@ -193,7 +193,7 @@ func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string
 //
 // Returns:
 // 1. error
-//    An error message if read fails.
+//    An error object if read fails.
 func (s *IsServer) Read(in *pb.ReadReq, srv pb.Is_ReadServer) error {
 	output, err := s.is.Read(in.ReadKeyname)
 	if err != nil {
@@ -233,7 +233,7 @@ func (s *IsServer) Read(in *pb.ReadReq, srv pb.Is_ReadServer) error {
 //
 // Returns:
 // 1. error
-//    An error message if store fails.
+//    An error object if store fails.
 func (s *IsServer) Store(rcv pb.Is_StoreServer) error {
 	blob := []byte{}
 	memType := ""
@@ -268,12 +268,14 @@ func (s *IsServer) Store(rcv pb.Is_StoreServer) error {
 // Parameters:
 // 1. ctx : context
 //    Refers to the server context
+// 2. in : Protobuf RemoveReq struct
+//    Refers to the protobuf struct comprising the ImageStore server Remove APIs
 //
 // Returns:
-// 1. pb.RemoveResp
-//    Refers to the response struct containing the response message
+// 1. *pb.RemoveResp
+//    Refers to the response struct instance containing the response message
 // 2. error
-//    An error message if remove fails.
+//    An error object if remove fails.
 func (s *IsServer) Remove(ctx context.Context, in *pb.RemoveReq) (*pb.RemoveResp, error) {
 	errr := s.is.Remove(in.RemKeyname)
 	if errr != nil {

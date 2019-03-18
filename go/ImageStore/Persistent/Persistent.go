@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-// Package Persistent is a wrapper around Read, Remove and Store APIs of ImageStore.
+// Package Persistent provides concrete implementation of persistent storage types like minio etc., for ImageStore
 package Persistent
 
 import (
@@ -57,7 +57,9 @@ const MINIO string = "minio"
 //
 // Parameters:
 // 1. storageType : string
-//    Returns the Imagestore storage type.
+//    Returns the ImageStore storage type.
+//    It can either be inmemory or persistent to store the buffer
+//    in Redis or Minio respectively.
 // 2. config : map[string]string
 //    Refers to the persistent config.
 //
@@ -65,7 +67,7 @@ const MINIO string = "minio"
 // 1. *Persistent
 //    Returns the Persistent instance
 // 2. error
-//    Returns an error message if initialization fails.
+//    Returns an error object if initialization fails.
 func NewPersistent(storageType string, config map[string]string) (*Persistent, error) {
 	if storageType == MINIO {
 		storage, err := minio.NewMinioStorage(config)
@@ -92,7 +94,7 @@ func NewPersistent(storageType string, config map[string]string) (*Persistent, e
 // 1. string
 //    Returns consolidated config key based on storage type.
 // 2. error
-//    Returns an error message if fetching config fails.
+//    Returns an error object if fetching config fails.
 func GetConfgKey(storageType string) (string, error) {
 	storageType = strings.ToLower(storageType)
 
@@ -110,10 +112,10 @@ func GetConfgKey(storageType string) (string, error) {
 //    Refers to the image handle of the image to be read.
 //
 // Returns:
-// 1. string
-//    Returns the image of the consolidated image handle.
+// 1. *io.Reader
+//    Returns an instance of io.Reader object of the consolidated image handle.
 // 2. error
-//    Returns an error message if read fails.
+//    Returns an error object if read fails.
 func (pStorage *Persistent) Read(keyname string) (*io.Reader, error) {
 	return pStorage.storage.Read(keyname)
 }
@@ -126,7 +128,7 @@ func (pStorage *Persistent) Read(keyname string) (*io.Reader, error) {
 //
 // Returns:
 // 1. error
-//    Returns an error message if remove fails.
+//    Returns an error object if remove fails.
 func (pStorage *Persistent) Remove(keyname string) error {
 	return pStorage.storage.Remove(keyname)
 }
@@ -141,7 +143,7 @@ func (pStorage *Persistent) Remove(keyname string) error {
 // 1. string
 //    Returns the image handle of the image stored.
 // 2. error
-//    Returns an error message if store fails.
+//    Returns an error object if store fails.
 func (pStorage *Persistent) Store(data []byte) (string, error) {
 	return pStorage.storage.Store(data)
 }

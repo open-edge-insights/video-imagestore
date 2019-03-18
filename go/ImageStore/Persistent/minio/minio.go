@@ -45,12 +45,31 @@ type MinioStorage struct {
 }
 
 // missingKeyError is helper method for reporting a missing key in the Minio configuration
+//
+// Parameters:
+// 1. key : string
+//    Refers to the minio image handle.
+//
+// Returns:
+// 1. error
+//    Returns an error object if initialization fails.
 func missingKeyError(key string) error {
 	msg := "Minio config missing key: " + key
 	glog.Errorf(msg)
 	return errors.New(msg)
 }
 
+// missingKeyError is helper method for reporting a missing key in the Minio configuration
+//
+// Parameters:
+// 1. config : map[string]string
+//    Refers to the minio config.
+//
+// Returns:
+// 1. *minio.Client
+//    Returns a minio client instance.
+// 1. error
+//    Returns an error object if initialization fails.
 func initClient(config map[string]string) (*minio.Client, error) {
 	glog.Infof("Pulling out config values")
 	host, ok := config["Host"]
@@ -117,6 +136,15 @@ func initClient(config map[string]string) (*minio.Client, error) {
 }
 
 // NewMinioStorage is used to create a new instance of the MinioStorage
+// Parameters:
+// 1. config : map[string]string
+//    Refers to the minio config.
+//
+// Returns:
+// 1. *MinioStorage
+//    Returns the MinioStorage instance
+// 2. error
+//    Returns an error object if initialization fails.
 func NewMinioStorage(config map[string]string) (*MinioStorage, error) {
 	client, err := initClient(config)
 	if err != nil {
@@ -132,9 +160,15 @@ func NewMinioStorage(config map[string]string) (*MinioStorage, error) {
 
 // Read is used to read the stored data from Minio.
 //
-// It accepts keyname as input.
+// Parameters:
+// 1. keyname : string
+//    Refers to the image handle of the image to be read.
 //
-// It returns the image of consolidated keyname.
+// Returns:
+// 1. *io.Reader
+//    Returns the ip.Reader instance.
+// 2. error
+//    Returns an error object if read fails.
 func (pMinioStorage *MinioStorage) Read(keyname string) (*io.Reader, error) {
 	// Get the object from the store
 	obj, err := pMinioStorage.client.GetObject(
@@ -148,18 +182,28 @@ func (pMinioStorage *MinioStorage) Read(keyname string) (*io.Reader, error) {
 
 // Remove is used to remove the data from Minio.
 //
-// It accepts keyname as input.
+// Parameters:
+// 1. keyname : string
+//    Refers to the image handle of the image to be removed.
 //
-// It returns an error if removing the consolidated image fails.
+// Returns:
+// 1. error
+//    Returns an object object if remove fails.
 func (pMinioStorage *MinioStorage) Remove(keyname string) error {
 	return pMinioStorage.client.RemoveObject(bucketName, keyname)
 }
 
 // Store  is used to store the data in Minio.
 //
-// It accepts value to be stored as parameter.
+// Parameters:
+// 1. data : []byte
+//    Refers to the image buffer to be stored in ImageStore.
 //
-// It returns image handle of respective image stored.
+// Returns:
+// 1. string
+//    Returns the image handle of the image stored.
+// 2. error
+//    Returns an error object if store fails.
 func (pMinioStorage *MinioStorage) Store(data []byte) (string, error) {
 	key := generateKeyName()
 	buffer := bytes.NewBuffer(data)
@@ -180,6 +224,10 @@ func (pMinioStorage *MinioStorage) Store(data []byte) (string, error) {
 }
 
 // generateKeyName is used to generate the keyname
+//
+// Returns:
+// 1. string
+//    Returns an unique uuid.
 func generateKeyName() string {
 	keyname := "persist_" + uuid.New().String()[:8]
 	return keyname

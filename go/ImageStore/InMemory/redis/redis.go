@@ -38,7 +38,7 @@ type RedisConnect struct {
 // 1. *RedisConnect
 //    Returns the RedisConnect instance
 // 2. error
-//    Returns an error message if initialization fails.
+//    Returns an error object if initialization fails.
 func NewRedisConnect(config map[string]string) (*RedisConnect, error) {
 
 	client = redis.NewClient(&redis.Options{
@@ -57,10 +57,10 @@ func NewRedisConnect(config map[string]string) (*RedisConnect, error) {
 //    Refers to the image handle of the image to be read.
 //
 // Returns:
-// 1. string
-//    Returns the image of the consolidated image handle.
+// 1. io.Reader
+//    Returns an instance of io.Reader object of the consolidated image handle.
 // 2. error
-//    Returns an error message if read fails.
+//    Returns an error object if read fails.
 func (pRedisConnect *RedisConnect) Read(keyname string) (*io.Reader, error) {
 	binarydata, err := client.Get(keyname).Result()
 	if err == redis.Nil {
@@ -81,7 +81,7 @@ func (pRedisConnect *RedisConnect) Read(keyname string) (*io.Reader, error) {
 //
 // Returns:
 // 1. error
-//    Returns an error message if remove fails.
+//    Returns an object object if remove fails.
 func (pRedisConnect *RedisConnect) Remove(keyname string) error {
 	_, err := client.Del(keyname).Result()
 	if err != nil {
@@ -91,6 +91,10 @@ func (pRedisConnect *RedisConnect) Remove(keyname string) error {
 }
 
 // generateKeyName is used to generate the keyname
+//
+// Returns:
+// 1. string
+//    Returns an unique uuid.
 func (pRedisConnect *RedisConnect) generateKeyName() string {
 	keyname := "inmem_" + uuid.New().String()[:8]
 	return keyname
@@ -106,7 +110,7 @@ func (pRedisConnect *RedisConnect) generateKeyName() string {
 // 1. string
 //    Returns the image handle of the image stored.
 // 2. error
-//    Returns an error message if store fails.
+//    Returns an error object if store fails.
 func (pRedisConnect *RedisConnect) Store(value []byte) (string, error) {
 
 	ttl, err := time.ParseDuration(pRedisConnect.retention)

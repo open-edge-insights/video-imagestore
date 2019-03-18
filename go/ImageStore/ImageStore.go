@@ -48,7 +48,7 @@ const (
 // 1. ImageStore object
 //    Returns an ImageStore object with config.
 // 2. error
-//    Returns an error if initialization fails.
+//    Returns an error object if initialization fails.
 func NewImageStore() (*ImageStore, error) {
 
 	//TODO: This call is failing when trying to connect to gRPC server running in the same container.
@@ -108,7 +108,7 @@ func NewImageStore() (*ImageStore, error) {
 // 1. *ImageStore
 //    Returns the ImageStore instance
 // 2. error
-//    Returns an error message if initialization fails.
+//    Returns an error object if initialization fails.
 func GetImageStoreInstance(cfg map[string]string, persistCfg map[string]string) (*ImageStore, error) {
 	cfg["InMemory"] = "redis"
 	inMemory, err := inmemory.NewInmemory(cfg)
@@ -129,10 +129,12 @@ func GetImageStoreInstance(cfg map[string]string, persistCfg map[string]string) 
 // Parameters:
 // 1. memoryType : string
 //    Refers to the storage type.
+//    It can either be inmemory or persistent to store the buffer
+//    in Redis or Minio respectively.
 //
 // Returns:
 // 1. error
-//    Returns an error message if initialization fails.
+//    Returns an error object if initialization fails.
 func (pImageStore *ImageStore) SetStorageType(memoryType string) error {
 	memoryType = strings.ToLower(memoryType)
 
@@ -153,10 +155,10 @@ func (pImageStore *ImageStore) SetStorageType(memoryType string) error {
 //    Refers to the image handle of the image to be read.
 //
 // Returns:
-// 1. string
+// 1. *io.Reader
 //    Returns the image of the consolidated image handle.
 // 2. error
-//    Returns an error message if read fails.
+//    Returns an error object if read fails.
 func (pImageStore *ImageStore) Read(keyname string) (*io.Reader, error) {
 	if strings.Contains(keyname, inMemKeyPattern) {
 		return pImageStore.inMemory.Read(keyname)
@@ -174,7 +176,7 @@ func (pImageStore *ImageStore) Read(keyname string) (*io.Reader, error) {
 //
 // Returns:
 // 1. error
-//    Returns an error message if remove fails.
+//    Returns an error object if remove fails.
 func (pImageStore *ImageStore) Remove(keyname string) error {
 
 	if strings.Contains(keyname, inMemKeyPattern) {
@@ -195,7 +197,7 @@ func (pImageStore *ImageStore) Remove(keyname string) error {
 // 1. string
 //    Returns the image handle of the image stored.
 // 2. error
-//    Returns an error message if store fails.
+//    Returns an error object if store fails.
 func (pImageStore *ImageStore) Store(value []byte) (string, error) {
 	if pImageStore.storageType == "inmemory" {
 		return pImageStore.inMemory.Store(value)

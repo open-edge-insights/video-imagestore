@@ -56,7 +56,7 @@ const (
 // 1. *GrpcClient
 //    Returns the GrpcClient instance.
 // 2. error
-//    Returns an error message if initialization fails.
+//    Returns an error object if initialization fails.
 func NewImageStoreClient(RootCA string, ClientCert string, ClientKey string, hostname, port string) (*GrpcClient, error) {
 	addr := hostname + ":" + port
 	glog.Infof("Addr: %s", addr)
@@ -121,7 +121,7 @@ func NewImageStoreClient(RootCA string, ClientCert string, ClientKey string, hos
 // 1. []byte
 //    Returns the consolidated byte array of the image handle
 // 2. error
-//    Returns an error message if read fails.
+//    Returns an error object if read fails.
 func (pClient *GrpcClient) Read(imgHandle string) ([]byte, error) {
 	// Set the gRPC timeout
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -164,7 +164,7 @@ func (pClient *GrpcClient) Read(imgHandle string) ([]byte, error) {
 // 1. string
 //    Returns image handle of byte stream stored.
 // 2. error
-//    Returns an error message if store fails.
+//    Returns an error object if store fails.
 func (pClient *GrpcClient) Store(imgFrame []byte, memType string) (string, error) {
 	// Set the gRPC timeout
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -205,7 +205,7 @@ func (pClient *GrpcClient) Store(imgFrame []byte, memType string) (string, error
 //    Returns the consolidated boolean of whether the image was
 //    successfully removed.
 // 2. error
-//    Returns an error message if remove fails.
+//    Returns an error object if remove fails.
 func (pClient *GrpcClient) Remove(imgHandle string) (bool, error) {
 	// Set the gRPC timeout
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)

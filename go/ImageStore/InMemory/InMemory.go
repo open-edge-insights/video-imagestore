@@ -65,8 +65,8 @@ func NewInmemory(config map[string]string) (*InMemory, error) {
 //    Refers to the image handle of the image to be read.
 //
 // Returns:
-// 1. string
-//    Returns the image of the consolidated image handle.
+// 1. *io.Reader
+//    Returns an instance of io.Reader object of the consolidated image handle.
 // 2. error
 //    Returns an error message if read fails.
 func (pInMemory *InMemory) Read(keyname string) (*io.Reader, error) {
