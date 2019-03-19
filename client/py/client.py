@@ -100,7 +100,7 @@ class GrpcImageStoreClient(object):
         """
         Read is a wrapper around gRPC python client implementation
         for Read gRPC interface.
-        
+
         Parameters
         ----------
         1. **imgHandle** : str
@@ -126,11 +126,11 @@ class GrpcImageStoreClient(object):
         """
         Store is a wrapper around gRPC python client implementation
         for Store gRPC interface.
-        
+
         Parameters
         ----------
         1. **byteStream** : bytes
-            Refers to the image handle of the image to be fetched 
+            Refers to the image handle of the image to be fetched
             from ImageStore.
         2. **memType** : str
             Refers to the memory type of where the image is to be stored.
@@ -154,7 +154,7 @@ class GrpcImageStoreClient(object):
         """
         Remove is a wrapper around gRPC python client implementation
         for Remove gRPC interface.
-        
+
         Parameters
         ----------
         1. **imgHandle** : str
@@ -162,7 +162,7 @@ class GrpcImageStoreClient(object):
 
         Returns
         -------
-        1. Returns true if successful and throws an exception with 
+        1. Returns true if successful and throws an exception with
            error if remove fails.
 
         """
@@ -177,7 +177,7 @@ class GrpcImageStoreClient(object):
         """
         ChunkFunction is used to return the generator object which
         is required by the gRPC store server interface.
-        
+
         Parameters
         ----------
         1. **byteStream** : bytes

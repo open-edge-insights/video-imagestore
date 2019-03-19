@@ -39,6 +39,7 @@ logging.basicConfig(level=logging.DEBUG,
                     '%(funcName)s : in line : [%(lineno)d] : %(message)s')
 log = logging.getLogger("GRPC_TEST")
 
+
 # === gRPC test library parse_args method ===
 def parse_args():
 
@@ -65,18 +66,19 @@ def parse_args():
 
     return parser.parse_args()
 
+
 def test_case(imgHandle):
 
     args = parse_args()
     client = GrpcImageStoreClient(args.client_cert, args.client_key,
                                   args.ca_cert, hostname=args.hostname)
-    
+
     inputFile = args.input_file
     outputFile = args.output_file
 
     inputBytes = None
     with open(inputFile, "rb") as f:
-            inputBytes = f.read()
+        inputBytes = f.read()
 
     # Testing Store("value") gRPC call
     keyname = client.Store(inputBytes, imgHandle)
@@ -96,7 +98,7 @@ def test_case(imgHandle):
              iter1, totalTime / iter1)
 
     log.info("Writing the binary data received into a file: %s",
-                 outputFile)
+             outputFile)
     with open(outputFile, "wb") as outfile:
         outfile.write(outputBytes)
 
@@ -117,6 +119,7 @@ def test_case(imgHandle):
 
     # Testing Remove("imgHandle") gRPC call
     client.Remove(keyname)
+
 
 if __name__ == '__main__':
 
