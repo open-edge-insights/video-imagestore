@@ -82,20 +82,25 @@ def test_case(imgHandle):
 
     # Testing Store("value") gRPC call
     keyname = client.Store(inputBytes, imgHandle)
+
     totalTime = 0.0
 
     # Testing Read("imgHandle") gRPC call
     iter1 = 20
     for i in range(iter1):
         start = time.time()
-        outputBytes = client.Read(keyname)
+        if isinstance(keyname, list):
+            for j in range(len(keyname)):
+                outputBytes = client.Read(keyname[j])
+        else:
+            outputBytes = client.Read(keyname)
         end = time.time()
         timeTaken = end - start
         log.info("Time taken for one read call: %f secs", timeTaken)
         totalTime += timeTaken
 
     log.info("Average time taken for Read() %d calls: %f secs",
-             iter1, totalTime / iter1)
+             i, totalTime / iter1)
 
     log.info("Writing the binary data received into a file: %s",
              outputFile)
@@ -117,8 +122,12 @@ def test_case(imgHandle):
     else:
         log.info("md5sum for the files doesn't match")
 
-    # Testing Remove("imgHandle") gRPC call
-    client.Remove(keyname)
+    # Testing Remove("imgHandle") gRPC
+    if isinstance(keyname, list):
+        for j in range(len(keyname)):
+            client.Remove(keyname[j])
+    else:
+        client.Remove(keyname)
 
 
 if __name__ == '__main__':
@@ -128,3 +137,6 @@ if __name__ == '__main__':
 
     # Testing Minio gRPC calls
     test_case('persistent')
+
+    # Testing Redis & Minio gRPC calls
+    test_case('both')

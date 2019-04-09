@@ -144,6 +144,9 @@ func (pImageStore *ImageStore) SetStorageType(memoryType string) error {
 	} else if memoryType == "persistent" {
 		pImageStore.storageType = memoryType
 		return nil
+	} else if memoryType == "both" {
+		pImageStore.storageType = memoryType
+		return nil
 	}
 	return errors.New("MemoryType: " + memoryType + " not supported")
 }
@@ -203,6 +206,17 @@ func (pImageStore *ImageStore) Store(value []byte) (string, error) {
 		return pImageStore.inMemory.Store(value)
 	} else if pImageStore.storageType == "persistent" {
 		return pImageStore.persistentStorage.Store(value)
+	} else if pImageStore.storageType == "both" {
+		inmemHandle, err := pImageStore.inMemory.Store(value)
+		if err != nil {
+			return "", err
+		}
+		persistHandle, err := pImageStore.persistentStorage.Store(value)
+		if err != nil {
+			return "", err
+		}
+		inmemHandle += "|" + persistHandle
+		return inmemHandle, nil
 	}
 	return "", errors.New("Memory type: " + pImageStore.storageType + " is not supported. Please set it before using ImageStore.SetStorageType API")
 }

@@ -147,6 +147,9 @@ class GrpcImageStoreClient(object):
         data = self._chunkfunction(byteStream, memType)
         response = self.stub.Store(data, timeout=1000)
         log.debug("Sending the response to the caller...")
+        if "|" in response.storeKeyname:
+            imgHandle_list = response.storeKeyname.split("|")
+            return imgHandle_list
         return response.storeKeyname
 
     def Remove(self, imgHandle):
