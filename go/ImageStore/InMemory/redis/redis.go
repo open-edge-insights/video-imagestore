@@ -117,16 +117,19 @@ func (pRedisConnect *RedisConnect) Store(value []byte) (string, error) {
 	if err != nil {
 		return "", err
 
-	}
-	keyname := pRedisConnect.generateKeyName()
+	} else {
+		keyname := pRedisConnect.generateKeyName()
 
-	go func() {
 		if ttl >= 1 {
 			err = client.Set(keyname, value, ttl).Err()
 		} else {
 			err = client.Set(keyname, value, 0).Err()
 		}
-	}()
 
-	return keyname, nil
+		if err != nil {
+			return "", err
+		} else {
+			return keyname, nil
+		}
+	}
 }

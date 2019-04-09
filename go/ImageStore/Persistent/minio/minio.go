@@ -213,11 +213,10 @@ func (pMinioStorage *MinioStorage) Store(data []byte) (string, error) {
 		n, err := pMinioStorage.client.PutObject(bucketName, key, buffer,
 			buffLen, minio.PutObjectOptions{})
 		if err != nil {
-			glog.Errorf("Failed to put object into Minio: %v", err)
+			glog.Errorf("Failed to put object into Minio for %s: %v", key, err)
 		}
 		if n < buffLen {
-			msg := "Failed to push all of the bytes to Minio"
-			glog.Errorf(msg)
+			glog.Errorf("Failed to push all of the bytes to Minio for key %s", key)
 		}
 	}()
 
