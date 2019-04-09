@@ -83,6 +83,10 @@ def test_case(imgHandle):
     # Testing Store("value") gRPC call
     keyname = client.Store(inputBytes, imgHandle)
 
+    # This sleep is required since Store API is too fast
+    # with the goroutine now
+    time.sleep(1)
+
     totalTime = 0.0
 
     # Testing Read("imgHandle") gRPC call
@@ -139,4 +143,4 @@ if __name__ == '__main__':
     test_case('persistent')
 
     # Testing Redis & Minio gRPC calls
-    test_case('both')
+    test_case('inmemory_persistent')

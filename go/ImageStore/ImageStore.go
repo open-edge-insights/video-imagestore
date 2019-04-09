@@ -144,7 +144,7 @@ func (pImageStore *ImageStore) SetStorageType(memoryType string) error {
 	} else if memoryType == "persistent" {
 		pImageStore.storageType = memoryType
 		return nil
-	} else if memoryType == "both" {
+	} else if memoryType == "inmemory_persistent" {
 		pImageStore.storageType = memoryType
 		return nil
 	}
@@ -206,7 +206,7 @@ func (pImageStore *ImageStore) Store(value []byte) (string, error) {
 		return pImageStore.inMemory.Store(value)
 	} else if pImageStore.storageType == "persistent" {
 		return pImageStore.persistentStorage.Store(value)
-	} else if pImageStore.storageType == "both" {
+	} else if pImageStore.storageType == "inmemory_persistent" {
 		inmemHandle, err := pImageStore.inMemory.Store(value)
 		if err != nil {
 			return "", err

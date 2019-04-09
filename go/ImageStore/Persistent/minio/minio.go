@@ -208,17 +208,18 @@ func (pMinioStorage *MinioStorage) Store(data []byte) (string, error) {
 	key := generateKeyName()
 	buffer := bytes.NewBuffer(data)
 	buffLen := int64(buffer.Len())
-	n, err := pMinioStorage.client.PutObject(bucketName, key, buffer,
-		buffLen, minio.PutObjectOptions{})
-	if err != nil {
-		glog.Errorf("Failed to put object into Minio: %v", err)
-		return "", err
-	}
-	if n < buffLen {
-		msg := "Failed to push all of the bytes to Minio"
-		glog.Errorf(msg)
-		return "", errors.New(msg)
-	}
+
+	go func() {
+		n, err := pMinioStorage.client.PutObject(bucketName, key, buffer,
+			buffLen, minio.PutObjectOptions{})
+		if err != nil {
+			glog.Errorf("Failed to put object into Minio: %v", err)
+		}
+		if n < buffLen {
+			msg := "Failed to push all of the bytes to Minio"
+			glog.Errorf(msg)
+		}
+	}()
 
 	return key, nil
 }
