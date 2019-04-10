@@ -39,6 +39,7 @@ func main() {
 	// Wait for DA to be up
 	flag.Parse()
 
+	glog.Infof("=============== STARTING imagestore ===============")
 	vendor_name := cpuidutil.Cpuid()
 	if vendor_name != "GenuineIntel" {
 		glog.Infof("*****Software runs only on Intel's hardware*****")
