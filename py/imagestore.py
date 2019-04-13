@@ -28,7 +28,8 @@ from DataAgent.da_grpc.client.py.client_internal.client \
 from Util.exception import DAException
 
 
-CLIENT_CERT = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_certificate.pem"
+CLIENT_CERT = \
+    "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_certificate.pem"
 CLIENT_KEY = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_key.pem"
 CA_CERT = "/etc/ssl/grpc_int_ssl_secrets/ca_certificate.pem"
 
@@ -40,7 +41,7 @@ class ImageStore():
         api implementations of inMemory and also filesystem.
 
     """
-    def __init__(self):
+    def __init__(self, dev_mode):
         """
             Instantiate the objects based on the memoryType and the config of
             particular memoryType's storage system. Based on this other Storage
@@ -48,7 +49,10 @@ class ImageStore():
 
         """
         try:
-            client = GrpcInternalClient(CLIENT_CERT, CLIENT_KEY, CA_CERT)
+            if dev_mode:
+                client = GrpcInternalClient()
+            else:
+                client = GrpcInternalClient(CLIENT_CERT, CLIENT_KEY, CA_CERT)
             self.config = client.GetConfigInt("RedisCfg")
             self.config["InMemory"] = "redis"
 
@@ -142,8 +146,9 @@ class ImageStore():
             elif 'persist' in keyname:
                 returndata = self.persistent.read(keyname)
             else:
-                returndata = output.handleOut('NotSupported', 'keyname is not having any\
-                                                inMemory key pattern')
+                returndata = output.handleOut('NotSupported', 'keyname\
+                                               is not having any\
+                                               inMemory key pattern')
         except Exception as e:
             raise e
         return returndata

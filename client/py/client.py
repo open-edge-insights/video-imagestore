@@ -37,8 +37,8 @@ class GrpcImageStoreClient(object):
     This class represents grpc ImageStore client
     """
 
-    def __init__(self, clientCert, clientKey,
-                 caCert,  hostname="localhost", port="50055"):
+    def __init__(self, clientCert=None, clientKey=None,
+                 caCert=None,  hostname="localhost", port="50055"):
         """
         GrpcImageStoreClient constructor
 
@@ -72,31 +72,41 @@ class GrpcImageStoreClient(object):
         addr = "{0}:{1}".format(self.hostname, self.port)
         log.debug("Establishing secure grpc channel to %s", addr)
 
-        if 'grpc_int_ssl_secrets' in caCert:
-            key = os.environ["SHARED_KEY"]
-            nonce = os.environ["SHARED_NONCE"]
-            symEncrypt = SymmetricEncryption(key)
-            ca_certs = symEncrypt.DecryptFile(caCert, nonce)
+        if (caCert is not None) and (clientKey is not None) \
+           and (clientCert is not None):
+            devMode = False
         else:
-            with open(caCert, 'rb') as f:
-                ca_certs = f.read()
+            devMode = True
 
-        with open(clientKey, 'rb') as f:
-            client_key = f.read()
+        if not devMode:
+            if 'grpc_int_ssl_secrets' in caCert:
+                key = os.environ["SHARED_KEY"]
+                nonce = os.environ["SHARED_NONCE"]
+                symEncrypt = SymmetricEncryption(key)
+                ca_certs = symEncrypt.DecryptFile(caCert, nonce)
+            else:
+                with open(caCert, 'rb') as f:
+                    ca_certs = f.read()
 
-        with open(clientCert, 'rb') as f:
-            client_certs = f.read()
+            with open(clientKey, 'rb') as f:
+                client_key = f.read()
 
-        try:
-            credentials = grpc.ssl_channel_credentials(
-                root_certificates=ca_certs, private_key=client_key,
-                certificate_chain=client_certs)
+            with open(clientCert, 'rb') as f:
+                client_certs = f.read()
 
-        except Exception as e:
-            log.error("Exception Occured : ", e.msg)
-            raise Exception
+            try:
+                credentials = grpc.ssl_channel_credentials(
+                    root_certificates=ca_certs, private_key=client_key,
+                    certificate_chain=client_certs)
 
-        channel = grpc.secure_channel(addr, credentials)
+            except Exception as e:
+                log.error("Exception Occured : ", str(e))
+                raise Exception
+
+            channel = grpc.secure_channel(addr, credentials)
+        else:
+            channel = grpc.insecure_channel(addr)
+
         self.stub = is_pb2_grpc.isStub(channel)
 
     def Read(self, imgHandle):

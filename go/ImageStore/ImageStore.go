@@ -42,17 +42,25 @@ const (
 	ClientKey  = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_key.pem"
 )
 
-// NewImageStore is the constructor type method which initialises the object for ImageStore Operations.
+// NewImageStore : This is the Constructor type method which initialises the Object for ImageStore Operations
 //
 // Returns:
 // 1. ImageStore object
-//    Returns an ImageStore object with config.
+//	  Returns an ImageStore object with config.
 // 2. error
-//    Returns an error object if initialization fails.
-func NewImageStore() (*ImageStore, error) {
+//	  Returns an error object if initialization fails.
+func NewImageStore(securityDisable bool) (*ImageStore, error) {
 
 	//TODO: This call is failing when trying to connect to gRPC server running in the same container.
-	grpcClient, err := client.NewGrpcInternalClient(ClientCert, ClientKey, RootCA, "localhost", "50052")
+	var err error
+	var grpcClient *client.GrpcInternalClient
+
+	if !securityDisable {
+		grpcClient, err = client.NewGrpcInternalClient(ClientCert, ClientKey, RootCA, "localhost", "50052")
+	} else {
+		grpcClient, err = client.NewGrpcInternalClient("", "", "", "localhost", "50052")
+	}
+
 	if err != nil {
 		glog.Errorf("Error connecting to gRPC: %v", err)
 		return nil, err

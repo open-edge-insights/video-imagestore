@@ -20,6 +20,7 @@ import (
 	"flag"
 	"os"
 	"os/exec"
+	"strconv"
 	"time"
 
 	"github.com/golang/glog"
@@ -40,6 +41,9 @@ func main() {
 	flag.Parse()
 
 	glog.Infof("=============== STARTING imagestore ===============")
+	var grpcClient *client.GrpcInternalClient
+	var err error
+
 	vendor_name := cpuidutil.Cpuid()
 	if vendor_name != "GenuineIntel" {
 		glog.Infof("*****Software runs only on Intel's hardware*****")
@@ -52,12 +56,19 @@ func main() {
 		glog.Error("DataAgent is not up, so exiting...")
 		os.Exit(-1)
 	}
+	Mode := os.Getenv("DEV_MODE")
+	devMode, err := strconv.ParseBool(Mode)
+	if !devMode {
+		grpcClient, err = client.NewGrpcInternalClient(ClientCert, ClientKey, RootCA, daServiceName, daPort)
+	} else {
+		grpcClient, err = client.NewGrpcInternalClientUnsecured(daServiceName, daPort)
+	}
 
-	grpcClient, errr := client.NewGrpcInternalClient(ClientCert, ClientKey, RootCA, daServiceName, daPort)
-	if errr != nil {
+	if err != nil {
 		glog.Errorf("Error while obtaining GrpcClient object...")
 		os.Exit(-1)
 	}
+
 	configRedis := "RedisCfg"
 	respMapRedis, err := grpcClient.GetConfigInt(configRedis)
 	if err != nil {

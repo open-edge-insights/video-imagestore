@@ -24,6 +24,7 @@ import (
 	"context"
 	"net"
 	"os"
+	"strconv"
 
 	client "IEdgeInsights/DataAgent/da_grpc/client/go/client_internal"
 	imagestore "IEdgeInsights/ImageStore/go/ImageStore"
@@ -64,6 +65,7 @@ type IsServer struct {
 //    Refers to the ImageStore minio configurations
 func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string]string) {
 
+	var s *grpc.Server
 	ipAddr, err := net.LookupIP("ia_imagestore")
 	if err != nil {
 		glog.Errorf("Failed to fetch the IP address for host: %v, error:%v", ipAddr, err)
@@ -81,71 +83,81 @@ func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string
 	minioConfigMap["Host"] = "localhost"
 	redisConfigMap["Host"] = "localhost"
 
-	grpcClient, err := client.NewGrpcInternalClient(ClientCert, ClientKey, RootCA, "ia_data_agent", "50052")
+	devMode := os.Getenv("DEV_MODE")
+	securityDisable, err := strconv.ParseBool(devMode)
 	if err != nil {
-		glog.Errorf("Error while obtaining GrpcClient object : %s", err)
+		glog.Errorf("Fail to read Development Mode environment variable(DEV_MODE): %s", err)
 		os.Exit(-1)
 	}
 
-	data, err := grpcClient.GetConfigInt("ImgStoreServerCert")
-	if err != nil {
-		glog.Errorf("Unable to read SERVER certificate from DataAgent %s", err)
-		os.Exit(-1)
-	}
+	if !securityDisable {
+		grpcClient, err := client.NewGrpcInternalClient(ClientCert, ClientKey, RootCA, "ia_data_agent", "50052")
+		if err != nil {
+			glog.Errorf("Error while obtaining GrpcClient object : %s", err)
+			os.Exit(-1)
+		}
 
-	// Read certificate binary
-	certPEMBlock, certValid := data[ServerCert]
-	if !certValid {
-		glog.Error("Failed to Read Server Certificate")
-		os.Exit(-1)
-	}
+		data, err := grpcClient.GetConfigInt("ImgStoreServerCert")
+		if err != nil {
+			glog.Errorf("Unable to read SERVER certificate from DataAgent %s", err)
+			os.Exit(-1)
+		}
 
-	keyPEMBlock, keyValid := data[ServerKey]
-	if !keyValid {
-		glog.Errorf("Failed to Read Server Key : %s", err)
-		os.Exit(-1)
-	}
+		// Read certificate binary
+		certPEMBlock, certValid := data[ServerCert]
+		if !certValid {
+			glog.Error("Failed to Read Server Certificate")
+			os.Exit(-1)
+		}
 
-	// Load the certificates from binary
-	keyPEMBlockByte, _ := b64.StdEncoding.DecodeString(keyPEMBlock)
-	certPEMBlockByte, _ := b64.StdEncoding.DecodeString(certPEMBlock)
-	certificate, err := tls.X509KeyPair(certPEMBlockByte, keyPEMBlockByte)
-	if err != nil {
-		glog.Errorf("Failed to Load ServerKey Pair : %s", err)
-		os.Exit(-1)
-	}
+		keyPEMBlock, keyValid := data[ServerKey]
+		if !keyValid {
+			glog.Errorf("Failed to Read Server Key : %s", err)
+			os.Exit(-1)
+		}
 
-	// Create a certificate pool from the certificate authority
-	certPool := x509.NewCertPool()
-	ca, caValid := data[filepath.Base(RootCA)]
-	if !caValid {
-		glog.Errorf("Failed to Read CA Certificate")
-		os.Exit(-1)
-	}
+		// Load the certificates from binary
+		keyPEMBlockByte, _ := b64.StdEncoding.DecodeString(keyPEMBlock)
+		certPEMBlockByte, _ := b64.StdEncoding.DecodeString(certPEMBlock)
+		certificate, err := tls.X509KeyPair(certPEMBlockByte, keyPEMBlockByte)
+		if err != nil {
+			glog.Errorf("Failed to Load ServerKey Pair : %s", err)
+			os.Exit(-1)
+		}
 
-	// Append the certificates from the CA
-	caByte, _ := b64.StdEncoding.DecodeString(ca)
-	if ok := certPool.AppendCertsFromPEM(caByte); !ok {
-		glog.Errorf("Failed to Append CA Certificate")
-		os.Exit(-1)
+		// Create a certificate pool from the certificate authority
+		certPool := x509.NewCertPool()
+		ca, caValid := data[filepath.Base(RootCA)]
+		if !caValid {
+			glog.Errorf("Failed to Read CA Certificate")
+			os.Exit(-1)
+		}
+
+		// Append the certificates from the CA
+		caByte, _ := b64.StdEncoding.DecodeString(ca)
+		if ok := certPool.AppendCertsFromPEM(caByte); !ok {
+			glog.Errorf("Failed to Append CA Certificate")
+			os.Exit(-1)
+		}
+
+		// Create the TLS configuration to pass to the GRPC server
+		creds := credentials.NewTLS(&tls.Config{
+			ClientAuth:   tls.RequireAndVerifyClientCert,
+			Certificates: []tls.Certificate{certificate},
+			ClientCAs:    certPool,
+		})
+
+		//Create the gRPC server
+		s = grpc.NewServer(grpc.Creds(creds))
+	} else {
+		s = grpc.NewServer()
 	}
 
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		glog.Errorf("failed to listen: %v", err)
-		os.Exit(-1)
+		os.Exit(-2)
 	}
-
-	// Create the TLS configuration to pass to the GRPC server
-	creds := credentials.NewTLS(&tls.Config{
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		Certificates: []tls.Certificate{certificate},
-		ClientCAs:    certPool,
-	})
-
-	//Create the gRPC server
-	s := grpc.NewServer(grpc.Creds(creds))
-
 	glog.Infof("Waiting for redis port to be up...")
 	// Wait until Redis port is up
 	redisPort := os.Getenv("REDIS_PORT")
