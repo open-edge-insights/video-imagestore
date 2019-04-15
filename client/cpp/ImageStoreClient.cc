@@ -67,10 +67,9 @@ class ImageStoreClient{
       }
       Status status = reader->Finish();
       bool statusCheck = status.ok();
-      if (statusCheck) {
-        std::cout << "Transfer successful." << std::endl;
-      } else {
+      if (statusCheck != 1) {
         std::cout << "Transfer failed." << std::endl;
+        return "";
       }
       return response;
   }
@@ -91,16 +90,13 @@ class ImageStoreClient{
       RemoveResp reply;
       ClientContext context;
       std::cout << __FILE__ << " : " << __LINE__ << " : " << "ImageHandle: " << imgHandle << std::endl;
-      bool response = false;
       Status status = _stub->Remove(&context, request, &reply);
       bool statusCheck = status.ok();
-      if (statusCheck) {
-        std::cout << "Remove successful." << std::endl;
-        response = true;
-      } else {
+      if (statusCheck != 1) {
         std::cout << "Remove failed." << std::endl;
+        return false;
       }
-      return response;
+      return true;
   }
 
   /*
