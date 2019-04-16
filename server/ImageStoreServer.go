@@ -83,6 +83,10 @@ func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string
 	minioConfigMap["Host"] = "localhost"
 	redisConfigMap["Host"] = "localhost"
 
+	// Currently setting the ports here to support dev mode
+	redisConfigMap["Port"] = os.Getenv("REDIS_PORT")
+	minioConfigMap["Port"] = os.Getenv("MINIO_PORT")
+
 	devMode := os.Getenv("DEV_MODE")
 	securityDisable, err := strconv.ParseBool(devMode)
 	if err != nil {
