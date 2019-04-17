@@ -35,10 +35,10 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-var gRPCImageStoreHost = "localhost"
+var gRPCImageStoreHost = os.Getenv("IMAGESTORE_GRPC_SERVER")
+var gRPCImageStorePort = os.Getenv("IMAGESTORE_PORT")
 
 const (
-	gRPCImageStorePort = "50055"
 	chunkSize          = 4095 * 1024 // 4 MB
 )
 
@@ -66,22 +66,17 @@ type IsServer struct {
 func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string]string) {
 
 	var s *grpc.Server
-	ipAddr, err := net.LookupIP("ia_imagestore")
-	if err != nil {
-		glog.Errorf("Failed to fetch the IP address for host: %v, error:%v", ipAddr, err)
-	} else {
-		gRPCImageStoreHost = ipAddr[0].String()
-	}
+	
 
 	defer glog.Flush()
 	if len(os.Args) < 1 {
 		glog.Infof("No args passed.")
 	}
-	addr := gRPCImageStoreHost + ":" + gRPCImageStorePort
+	addr := ":" + gRPCImageStorePort
 
-	// Manually set the host to localhost since we are inside the docker network
-	minioConfigMap["Host"] = "localhost"
-	redisConfigMap["Host"] = "localhost"
+	
+	minioConfigMap["Host"] = os.Getenv("IMAGESTORE_GRPC_SERVER")
+	redisConfigMap["Host"] = minioConfigMap["Host"]
 
 	// Currently setting the ports here to support dev mode
 	redisConfigMap["Port"] = os.Getenv("REDIS_PORT")
@@ -95,7 +90,7 @@ func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string
 	}
 
 	if !securityDisable {
-		grpcClient, err := client.NewGrpcInternalClient(ClientCert, ClientKey, RootCA, "ia_data_agent", "50052")
+		grpcClient, err := client.NewGrpcInternalClient(ClientCert, ClientKey, RootCA, os.Getenv("DATA_AGENT_GRPC_SERVER"), os.Getenv("GRPC_INTERNAL_PORT"))
 		if err != nil {
 			glog.Errorf("Error while obtaining GrpcClient object : %s", err)
 			os.Exit(-1)

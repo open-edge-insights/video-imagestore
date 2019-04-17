@@ -67,8 +67,8 @@ class GrpcImageStoreClient(object):
         """
         self.hostname = hostname
         self.port = port
-        if 'IMAGESTORE_SERVER' in os.environ:
-            self.hostname = os.environ['IMAGESTORE_SERVER']
+        if 'IMAGESTORE_GRPC_SERVER' in os.environ:
+            self.hostname = os.environ['IMAGESTORE_GRPC_SERVER']
         addr = "{0}:{1}".format(self.hostname, self.port)
         log.debug("Establishing secure grpc channel to %s", addr)
 

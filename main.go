@@ -32,14 +32,13 @@ const (
 	RootCA        = "/etc/ssl/grpc_int_ssl_secrets/ca_certificate.pem"
 	ClientCert    = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_certificate.pem"
 	ClientKey     = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_key.pem"
-	daServiceName = "ia_data_agent"
-	daPort        = "50052"
 )
 
 func main() {
 	// Wait for DA to be up
 	flag.Parse()
-
+	daServiceName := os.Getenv("DATA_AGENT_GRPC_SERVER")
+	daPort := os.Getenv("GRPC_INTERNAL_PORT")
 	glog.Infof("=============== STARTING imagestore ===============")
 	var grpcClient *client.GrpcInternalClient
 	var err error
@@ -99,7 +98,7 @@ func main() {
 //    Refers to the redis config.
 func StartRedis(redisConfigMap map[string]string) {
 	redisPort := os.Getenv("REDIS_PORT")
-	cmd := exec.Command("redis-server", "--port", redisPort, "--requirepass", redisConfigMap["Password"])
+	cmd := exec.Command("redis-server", "--port", redisPort, "--requirepass", redisConfigMap["Password"], "--bind", "127.0.0.1")
 	err := cmd.Run()
 	if err != nil {
 		glog.Errorf("Not able to start redis server: %v", err)
@@ -120,7 +119,7 @@ func StartMinio(minioConfigMap map[string]string) {
 	glog.Infof("Minio port: %v", minioPort)
 	// TODO: Need to see a way to pass port while bring
 	// as --address switch didn't work as expected
-	cmd := exec.Command("./minio", "server", "/data")
+	cmd := exec.Command("./minio", "server", "--address", "127.0.0.1:" + os.Getenv("MINIO_PORT"), "/data")
 	err := cmd.Run()
 	if err != nil {
 		glog.Errorf("Not able to start minio server: %v", err)
