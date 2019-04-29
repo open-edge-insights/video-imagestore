@@ -2,13 +2,19 @@
 ARG IEI_VERSION
 FROM ia_gobase:$IEI_VERSION
 
+ENV GO_WORK_DIR /IEI/go/src/IEdgeInsights
+ENV PATH ${PATH}:/usr/local/go/bin:/IEI/go/bin
 WORKDIR ${GO_WORK_DIR}
 ENV PYTHONPATH .:/IEI/go/src/IEdgeInsights/DataAgent/da_grpc/protobuff
 
+ENV GOPATH /IEI/go
+
 RUN mkdir -p ${GO_WORK_DIR}/log
 
+RUN apt-get update
+
 # Installing build tools
-RUN apk add --no-cache cmake g++ build-base git wget
+RUN apt-get install -y cmake g++ build-essential
 
 # Installing all golang dependencies
 # TODO: Use dep tool itself in future once the "source" value
@@ -93,7 +99,10 @@ RUN mkdir -p ${MINIO_GO_PATH} && \
     cd ${MINIO_GO_PATH} && \
     git checkout -b  v6.0.10 tags/v6.0.10
 
-RUN apk add --no-cache linux-headers
+# Setting timezone inside the container
+RUN apt-get update
+RUN apt-get -y install build-essential
+RUN apt-get -y install tcl
 
 ARG REDIS_VERSION
 RUN wget http://download.redis.io/releases/redis-${REDIS_VERSION}.tar.gz
