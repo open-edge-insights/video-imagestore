@@ -100,7 +100,7 @@ class GrpcImageStoreClient(object):
                     certificate_chain=client_certs)
 
             except Exception as e:
-                log.error("Exception Occured : ", str(e))
+                log.error("Exception Occured : " + str(e))
                 raise Exception
 
             channel = grpc.secure_channel(addr, credentials)
