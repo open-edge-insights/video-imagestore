@@ -2,12 +2,14 @@
 ARG IEI_VERSION
 FROM ia_gobase:$IEI_VERSION
 
+ENV GO_WORK_DIR /IEI/go/src/IEdgeInsights
+ENV PATH ${PATH}:/usr/local/go/bin:/IEI/go/bin
+WORKDIR ${GO_WORK_DIR}
 ENV PYTHONPATH .:/IEI/go/src/IEdgeInsights/DataAgent/da_grpc/protobuff
 
-RUN mkdir -p ${GO_WORK_DIR}/log
+ENV GOPATH /IEI/go
 
-# Installing build tools
-RUN apk add --no-cache cmake g++ wget linux-headers
+RUN mkdir -p ${GO_WORK_DIR}/log
 
 # Installing all golang dependencies
 # TODO: Use dep tool itself in future once the "source" value
@@ -141,3 +143,4 @@ RUN chown -R ${IEI_UID} /.minio
 ENTRYPOINT ["./ImageStore/main"]
 CMD ["-stderrthreshold", ${GO_LOG_LEVEL}, "-v", ${GO_VERBOSE}]
 HEALTHCHECK NONE
+
