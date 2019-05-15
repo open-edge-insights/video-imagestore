@@ -21,6 +21,8 @@ ImageStore Module provides C++ APIs for image read and remove in both in-memory(
     export no_proxy=$no_proxy,<IEI_node_ip_address>
     ```
 
+* Set `INPUT_FILE` & `OUTPUT_FILE` variables in Makefile with absolute paths of input & output images.
+
 * Copying certs and keys:
     * Copy ImageStore client cert and key to /etc/ssl/imagestore
     * Copy CA cert to /etc/ssl/ca
@@ -40,13 +42,3 @@ ImageStore Module provides C++ APIs for image read and remove in both in-memory(
 > **Note**:
 > 1. Right now, the IEI ImageStore gRPC server runs at port `50055`. If one wish to change this, ensure that IEI's ImageStore gRPC server
 >    also is listening at that port.
-> 2. Run command `docker exec -it ia_imagestore bash` to get inside ia_imagestore container ans fetch the redis `inmem` image handle stored in
-> redis by following below steps:
->
->    ```sh
->    I have no name!@ia_imagestore:/IEI/go/src/IEdgeInsights$ ./redis-5.0.2/src/redis-cli
->    127.0.0.1:6379> AUTH redis123
->    OK
->    127.0.0.1:6379> KEYS *
->   ```
-> 3. Go to `/opt/intel/iei/data/image-store-bucket` path to fetch the blob for `perist` image handle stored in minio.
