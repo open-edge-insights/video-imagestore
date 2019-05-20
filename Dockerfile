@@ -2,13 +2,6 @@
 ARG IEI_VERSION
 FROM ia_gobase:$IEI_VERSION
 
-ENV GO_WORK_DIR /IEI/go/src/IEdgeInsights
-ENV PATH ${PATH}:/usr/local/go/bin:/IEI/go/bin
-WORKDIR ${GO_WORK_DIR}
-ENV PYTHONPATH .:/IEI/go/src/IEdgeInsights/DataAgent/da_grpc/protobuff
-
-ENV GOPATH /IEI/go
-
 RUN mkdir -p ${GO_WORK_DIR}/log
 
 # Installing all golang dependencies
@@ -50,7 +43,7 @@ ARG REDIS_VERSION
 RUN wget http://download.redis.io/releases/redis-${REDIS_VERSION}.tar.gz
 RUN tar xzf redis-${REDIS_VERSION}.tar.gz
 RUN cd /IEI/go/src/IEdgeInsights/redis-${REDIS_VERSION} && \
-    make && \
+    make -j8 && \
     cp /IEI/go/src/IEdgeInsights/redis-${REDIS_VERSION}/src/redis-server /usr/local/bin && \
     cp /IEI/go/src/IEdgeInsights/redis-${REDIS_VERSION}/src/redis-cli /usr/local/bin
 
@@ -59,8 +52,11 @@ RUN wget https://dl.minio.io/server/minio/release/linux-amd64/archive/minio.${MI
 RUN mv minio.${MINIO_VERSION} minio
 RUN chmod +x minio
 
+ARG IEI_UID
 # Adding cert dirs
-RUN mkdir -p /etc/ssl/imagestore
+RUN mkdir -p /etc/ssl/imagestore && \
+    mkdir /.minio && \
+    chown -R ${IEI_UID} /.minio
 
 # These flags are needed for enabling security while compiling and linking with open62541, cpuidcheck in golang
 ENV CGO_CFLAGS "$CGO_FLAGS -O2 -D_FORTIFY_SOURCE=2 -Werror=format-security -fstack-protector-strong -fPIC"
@@ -71,27 +67,22 @@ ENV SAFESTRING_VER 77b772849eda2321fb0dca56a321e3939930d7b9
 RUN	git clone https://github.com/intel/safestringlib.git && \
 	cd safestringlib && \
 	git checkout ${SAFESTRING_VER} && \
-    make
+    make -j8
 
-WORKDIR /IEI/go/src/IEdgeInsights
-ADD ImageStore/ ./ImageStore
-ADD DataAgent/ ./DataAgent
-ADD Util/ ./Util
+COPY ImageStore/ ./ImageStore
+COPY DataAgent/ ./DataAgent
 
 # Copying safestringlib to DataBusAbstraction and Util
 RUN cd safestringlib && \
     cp -rf libsafestring.a ${GO_WORK_DIR}/Util/cpuid
 
 RUN cd Util/cpuid && \
-    make
+    make -j8
 
 ENV PYTHONPATH ${PYTHONPATH}:./DataAgent/da_grpc/protobuff/py:./DataAgent/da_grpc/protobuff/py/pb_internal:./ImageStore/protobuff/py
 
 RUN go build -o /IEI/go/src/IEdgeInsights/ImageStore/main ImageStore/main.go
 
-RUN mkdir /.minio
-ARG IEI_UID
-RUN chown -R ${IEI_UID} /.minio
 ENTRYPOINT ["./ImageStore/main"]
 CMD ["-stderrthreshold", ${GO_LOG_LEVEL}, "-v", ${GO_VERBOSE}]
 HEALTHCHECK NONE
