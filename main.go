@@ -65,19 +65,19 @@ func main() {
 
 	if err != nil {
 		glog.Errorf("Error while obtaining GrpcClient object...")
-		os.Exit(-1)
+                os.Exit(-1)
 	}
 
 	configRedis := "RedisCfg"
 	respMapRedis, err := grpcClient.GetConfigInt(configRedis)
 	if err != nil {
-		glog.Errorf("GetConfigInt failed...")
-		os.Exit(-1)
+		glog.Errorf("GetConfigInt failed for Redis...")
+                os.Exit(-1)
 	}
 	configMinio := "MinioCfg"
 	respMapMinio, err := grpcClient.GetConfigInt(configMinio)
 	if err != nil {
-		glog.Errorf("GetConfigInt failed...")
+		glog.Errorf("GetConfigInt failed for Minio...")
 		os.Exit(-1)
 	}
 
@@ -102,7 +102,7 @@ func StartRedis(redisConfigMap map[string]string) {
 	err := cmd.Run()
 	if err != nil {
 		glog.Errorf("Not able to start redis server: %v", err)
-		os.Exit(-1)
+                os.Exit(-1)
 	}
 }
 
@@ -123,7 +123,7 @@ func StartMinio(minioConfigMap map[string]string) {
 	err := cmd.Run()
 	if err != nil {
 		glog.Errorf("Not able to start minio server: %v", err)
-		os.Exit(-1)
+                os.Exit(-1)
 	}
 }
 
@@ -135,7 +135,7 @@ func StartMinio(minioConfigMap map[string]string) {
 func missingKeyError(key string) {
 	msg := "Minio config missing key: " + key
 	glog.Errorf(msg)
-	os.Exit(-1)
+        return
 }
 
 // StartMinioRetentionPolicy cleans up the ImageStore
@@ -150,7 +150,7 @@ func StartMinioRetentionPolicy(config map[string]string) {
 	portUp := util.CheckPortAvailability("", minioPort)
 	if !portUp {
 		glog.Errorf("Minio port: %s not up, so exiting...", minioPort)
-		os.Exit(-1)
+                os.Exit(-1)
 	}
 
 	region := "gateway"
@@ -165,7 +165,7 @@ func StartMinioRetentionPolicy(config map[string]string) {
 	retentionTime, err := time.ParseDuration(retentionTimeStr)
 	if err != nil {
 		glog.Errorf("Failed to parse retention time duration: %v", err)
-		os.Exit(-1)
+                os.Exit(-1)
 	}
 
 	pollIntervalStr, ok := config["RetentionPollInterval"]
@@ -207,7 +207,7 @@ func StartMinioRetentionPolicy(config map[string]string) {
 	} else {
 		msg := "Ssl key in Minio config must be true or false, not :" + sslStr
 		glog.Errorf(msg)
-		os.Exit(-1)
+                os.Exit(-1)
 	}
 
 	glog.V(1).Infof("Config: Host=%s, Port=%s, ssl=%v", host, port, ssl)
@@ -216,7 +216,7 @@ func StartMinioRetentionPolicy(config map[string]string) {
 		host+":"+port, accessKey, secretKey, ssl, region)
 	if err != nil {
 		glog.Errorf("Failed to connect to Minio server: %v", err)
-		os.Exit(-1)
+                os.Exit(-1)
 	}
 
 	// Check if the bucket exists
@@ -224,7 +224,7 @@ func StartMinioRetentionPolicy(config map[string]string) {
 	found, err := client.BucketExists(bucketName)
 	if err != nil {
 		glog.Errorf("Failed to verify existence of bucket: %v", err)
-		os.Exit(-1)
+                os.Exit(-1)
 	}
 
 	if !found {
@@ -268,7 +268,7 @@ func StartMinioRetentionPolicy(config map[string]string) {
 
 	for rErr := range client.RemoveObjects(bucketName, objectsCh) {
 		glog.Errorf("Error removing objects from Minio: %v", rErr)
-		os.Exit(-1)
+                os.Exit(-1)
 	}
 
 	if err := <-objectsErrCh; err != nil {
