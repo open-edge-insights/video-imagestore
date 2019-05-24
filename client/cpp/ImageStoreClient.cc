@@ -41,16 +41,17 @@ using ImageStore::is;
 
 class ImageStoreClient{
   public:
+  /**
+   * @param channel gRPC channel over which data transfer occurs
+  */
   ImageStoreClient(std::shared_ptr<Channel> channel)
         : _stub(is::NewStub(channel)) {}
 
-  /*
+  /**
       Read is a wrapper around gRPC C++ client implementation
       for Read gRPC interface.
-      Arguments:
-      imgHandle(string): key for ImageStore
-      Returns:
-      The consolidated string(value from ImageStore) associated with
+      @param imgHandle(string): key for ImageStore
+      @return The consolidated string(value from ImageStore) associated with
       that imgHandle
   */
   std::string Read(const std::string& imgHandle)
@@ -74,13 +75,11 @@ class ImageStoreClient{
       return response;
   }
 
-  /*
+  /**
       Remove is a wrapper around gRPC C++ client implementation
       for Remove gRPC interface.
-      Arguments:
-      imgHandle(string): key for ImageStore
-      Returns:
-      The consolidated boolean if whether the consolidated
+      @param imgHandle(string): key for ImageStore
+      @return The consolidated boolean if whether the consolidated
       value was removed.
   */
   bool Remove(const std::string& imgHandle)
@@ -99,14 +98,12 @@ class ImageStoreClient{
       return true;
   }
 
-  /*
+  /**
       Store is a wrapper around gRPC C++ client implementation
       for Store gRPC interface.
-      Arguments:
-      memoryType(string): memoryType for ImageStore
-      imgFrame(string): image to be stored in ImageStore
-      Returns:
-      The consolidated imgHandle string of imgFrame stored.
+      @param memoryType(string): memoryType for ImageStore
+      @param imgFrame(string): image to be stored in ImageStore
+      @return The consolidated imgHandle string of imgFrame stored.
   */
   std::string Store(const std::string& memoryType, const std::string& imgFrame)
   {

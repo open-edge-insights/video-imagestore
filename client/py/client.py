@@ -34,37 +34,23 @@ chunk_size = 4095*1024
 
 class GrpcImageStoreClient(object):
     """
-    This class represents grpc ImageStore client
+    GrpcImageStoreClient class represents grpc ImageStore client
     """
 
     def __init__(self, clientCert=None, clientKey=None,
                  caCert=None,  hostname="localhost", port="50055"):
-        """
-        GrpcImageStoreClient constructor
 
-        Args:
-        :type clientCert: string
-        :param clientCert: Refers to the imagestore client certificate
+        '''! GrpcImageStoreClient constructor
+        @param clientCert(string)   refers to the imagestore client
+                                    certificate
+        @param clientKey(string)    refers to the imagestore client key
+        @param caCert(string)       refers to the ca certificate
+        @param hostname(string)     refers to hostname/ip address of the m/c
+                                    where DataAgent module of IEI is running
+                                    (default: localhost)
+        @param port(string)         refers to gRPC port (default: 50055)
+        '''
 
-        :type clientKey: string
-        :param clientKey: Refers to the imagestore client key
-
-        :type caCert: string
-        :param caCert: Refers to the ca certificate
-
-        :type hostname: string
-        :param hostname: Refers to hostname/ip address of the m/c
-                         where DataAgent module of IEI is running
-                         (default: localhost)
-
-        :type port: string
-        :param port: Refers to gRPC port (default: 50055)
-
-        Returns:
-        stub
-            gRPC object which contains the required interfaces
-
-        """
         self.hostname = hostname
         self.port = port
         if 'IMAGESTORE_GRPC_SERVER' in os.environ:
@@ -110,20 +96,15 @@ class GrpcImageStoreClient(object):
         self.stub = is_pb2_grpc.isStub(channel)
 
     def Read(self, imgHandle):
-        """
-        Read is a wrapper around gRPC python client implementation
-        for Read gRPC interface.
 
-        Args:
-        :type imgHandle: string
-        :param imgHandle: Refers to the image handle to be fetched
-                          from ImageStore.
+        '''! Read is a wrapper around  gRPC python client implementation
+             for Read gRPC interface
+        @param imgHandle(string)  refers to the image handle to be fetched
+                                  from ImageStore
+        @return bytes             byte stream of the corresponding image
+                                  handle
+        '''
 
-        Returns:
-        bytes
-            byte stream of the corresponding image handle
-
-        """
         log.debug("Inside Read() client wrapper...")
         response = self.stub.Read(is_pb2.ReadReq(readKeyname=imgHandle),
                                   timeout=1000)
@@ -134,25 +115,18 @@ class GrpcImageStoreClient(object):
         return outputBytes
 
     def Store(self, byteStream, memType):
-        """
-        Store is a wrapper around gRPC python client implementation
-        for Store gRPC interface.
 
-        Args:
-        :type byteStream: bytes
-        :param byteStream: Refers to the image handle of the image
-                           to be fetched from ImageStore.
+        '''! Store is a wrapper around gRPC python client implementation
+             for Store gRPC interface
+        @param byteStream(bytes)  refers to the image handle of the image
+                                  to be fetched from ImageStore
+        @param memType(string)    refers to the memory type of where the
+                                  image is to be stored. It can either be
+                                  inmemory or persistent to store the buffer
+                                  in Redis or Minio respectively
+        @return str               Image handle of byte stream stored
+        '''
 
-        :type memType: string
-        :param memType: Refers to the memory type of where the image
-                        is to be stored. It can either be inmemory
-                        or persistent to store the buffer in Redis
-                        or Minio respectively.
-
-        Returns:
-        str
-            Image handle of byte stream stored.
-        """
         log.debug("Inside Store() client wrapper...")
         data = self._chunkfunction(byteStream, memType)
         response = self.stub.Store(data, timeout=1000)
@@ -163,20 +137,15 @@ class GrpcImageStoreClient(object):
         return response.storeKeyname
 
     def Remove(self, imgHandle):
-        """
-        Remove is a wrapper around gRPC python client implementation
-        for Remove gRPC interface.
 
-        Args:
-        :type imgHandle: bytes
-        :param imgHandle: Refers to the image handle to be removed
-                          from ImageStore.
+        '''! Remove is a wrapper around gRPC python client implementation
+             for Remove gRPC interface
+        @param imgHandle(bytes)  refers to the image handle to be removed
+                                 from ImageStore
+        @return  true if successful and throws an exception with
+                 error if remove fails
+        '''
 
-        Returns:
-        1. Returns true if successful and throws an exception with
-           error if remove fails.
-
-        """
         log.debug("Inside Remove() client wrapper...")
         response = self.stub.Remove(is_pb2.RemoveReq(remKeyname=imgHandle),
                                     timeout=1000)
@@ -185,25 +154,18 @@ class GrpcImageStoreClient(object):
 
     # === gRPC client library chunkfunction method ===
     def _chunkfunction(self, byteStream, memType):
-        """
-        ChunkFunction is used to return the generator object which
-        is required by the gRPC store server interface.
 
-        Args:
-        :type byteStream: bytes
-        :param byteStream: Refers to the image frame to be stored
-                           in ImageStore.
+        '''! ChunkFunction is used to return the generator object which
+             is required by the gRPC store server interface
+        @param byteStream(bytes)  refers to the image frame to be stored
+                                  in ImageStore
+        @param memType(string)    refers to the memory type of where the image
+                                  is to be stored. It can either be inmemory
+                                  or persistent to store the buffer in Redis
+                                  or Minio respectively
+         @return generator of the byteStream object
+         '''
 
-        :type memType: string
-        :param memType: Refers to the memory type of where the image
-                        is to be stored. It can either be inmemory
-                        or persistent to store the buffer in Redis
-                        or Minio respectively.
-
-        Returns:
-        generator
-                Returns a generator of the byteStream object.
-        """
         for i in range(0, len(byteStream), chunk_size):
             yield is_pb2.StoreReq(chunk=byteStream[i:i + chunk_size],
                                   memoryType=memType)

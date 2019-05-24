@@ -36,3 +36,9 @@ ImageStore Module provides APIs for image read, store and remove in both in-memo
 
 > **Note**: Right now, the IEI ImageStore gRPC server runs at port `50055`. If one wish to change this, ensure that IEI's ImageStore gRPC server
 > also is listening at that port.
+
+## To view the documentation navigate to the below link
+
+```sh
+/opt/intel/iei/dist_libs/ImageStore/client/py/doc/html/files.html
+```
