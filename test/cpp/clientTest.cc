@@ -54,39 +54,10 @@ void read(const std::string& filename, std::string& data)
 	return;
 }
 
-void test_case(int argc, char** argv, const std::string& imgHandle)
+void test_case(int argc, char** argv, const std::string& imgHandle, ImageStoreClient& gclient)
 {
   ReadReq request;
   ReadResp reply;
-  std::string root;
-  std::string key;
-  std::string cert;
-  int exitCondition = 1;
-
-  if(argc < 7)
-  {
-    cout << "Usage: ./clientTest <imgstore_host> <imgstore_port> <img_client_cert> <img_client_key> <ca_cert> <input_file> <output_file>" << endl;
-    exit(exitCondition);
-  }
-
-  read(argv[3], cert);
-  read(argv[4], key);
-  read(argv[5], root);
-
-  grpc::SslCredentialsOptions opts =
-		{
-			root,
-			key,
-			cert
-		};
-
-  std::string endpoint;
-  endpoint = argv[1];
-  endpoint += ":";
-  endpoint += argv[2];
-  std::cout << "Endpoint: " << endpoint << std::endl;
-  ImageStoreClient gclient(grpc::CreateChannel(endpoint,
-                        grpc::SslCredentials(opts)));
 
   std::string storedata;
   std::ifstream in;
@@ -125,11 +96,59 @@ void test_case(int argc, char** argv, const std::string& imgHandle)
 int main(int argc, char** argv) {
   int returnCondition = 0;
 
-  // Testing redis gRPC calls
-  test_case(argc, argv, "inmemory");
+  std::string root;
+  std::string key;
+  std::string cert;
+  int exitCondition = 1;
 
-  // Testing minio gRPC calls
-  test_case(argc, argv, "persistent");
+  if(argc < 7)
+  {
+    cout << "Usage: ./clientTest <imgstore_host> <imgstore_port> <img_client_cert> <img_client_key> <ca_cert> <input_file> <output_file>" << endl;
+    exit(exitCondition);
+  }
+
+  read(argv[3], cert);
+  read(argv[4], key);
+  read(argv[5], root);
+
+  grpc::SslCredentialsOptions opts =
+		{
+			root,
+			key,
+			cert
+		};
+
+  std::string endpoint;
+  endpoint = argv[1];
+  endpoint += ":";
+  endpoint += argv[2];
+  std::cout << "Endpoint: " << endpoint << std::endl;
+
+  if(argv[8] == "true") {
+    ImageStoreClient gclient(grpc::CreateChannel(endpoint,
+                             grpc::InsecureChannelCredentials()));
+
+    // Testing redis gRPC calls
+    test_case(argc, argv, "inmemory", gclient);
+
+    // Testing minio gRPC calls
+    test_case(argc, argv, "persistent", gclient);
+
+    // Testing redis & minio gRPC calls
+    test_case(argc, argv, "inmemory_persistent", gclient);
+  } else {
+    ImageStoreClient gclient(grpc::CreateChannel(endpoint,
+                             grpc::SslCredentials(opts)));
+
+    // Testing redis gRPC calls
+    test_case(argc, argv, "inmemory", gclient);
+
+    // Testing minio gRPC calls
+    test_case(argc, argv, "persistent", gclient);
+
+    // Testing redis & minio gRPC calls
+    test_case(argc, argv, "inmemory_persistent", gclient);
+  }
 
   return returnCondition;
 }

@@ -23,6 +23,7 @@ GRPC_CPP_PLUGIN_PATH ?= `which $(GRPC_CPP_PLUGIN)`
 LDFLAGS += -L/usr/local/lib `pkg-config --libs protobuf grpc++ grpc`\
            -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed\
            -ldl
+DEV_MODE = false
 
 all: clientTest
 
@@ -32,7 +33,8 @@ clientTest:	clean system-check ImageStore.pb.o ImageStore.grpc.pb.o clientTest.o
 			                             $(SERVER_CERTS)/imagestore_client_key.pem \
 										 $(CA_CERTS)/ca_certificate.pem \
 										 $(INPUT_FILE) \
-										 $(OUTPUT_FILE)
+										 $(OUTPUT_FILE) \
+										 $(DEV_MODE)
 
 ImageStore.pb.o:
 	protoc -I $(PROTOPATH) --cpp_out=$(PROTOCPPPATH)/ $(PROTOPATH)/ImageStore.proto
