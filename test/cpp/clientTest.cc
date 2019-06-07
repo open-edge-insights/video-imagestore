@@ -124,7 +124,9 @@ int main(int argc, char** argv) {
   endpoint += argv[2];
   std::cout << "Endpoint: " << endpoint << std::endl;
 
-  if(argv[8] == "true") {
+  bool dev_mode;
+  istringstream(argv[8]) >> std::boolalpha >> dev_mode;
+  if(dev_mode) {
     ImageStoreClient gclient(grpc::CreateChannel(endpoint,
                              grpc::InsecureChannelCredentials()));
 
