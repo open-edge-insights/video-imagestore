@@ -73,10 +73,23 @@ void test_case(int argc, char** argv, const std::string& imgHandle, ImageStoreCl
 
   std::cout << "-------------- Calling Read --------------" << std::endl;
   for(int i = 0; i < iterations; i++) {
+    
+    std::string response = "";
+    size_t pos = 0;
+    std::string delimiter = "|";
+    clock_t begin_time;
 
-    const clock_t begin_time = clock();
-    std::string response = gclient.Read(keyname);
-    const clock_t end_time = clock();
+    if ( (pos = keyname.find(delimiter)) != std::string::npos) {
+      std::string inmem_key = keyname.substr(0, pos);
+      std::string persist_key = keyname.substr(pos + delimiter.length(), keyname.length());
+      begin_time = clock();
+      response = gclient.Read(persist_key);
+    } else {
+      begin_time = clock();
+      response = gclient.Read(keyname);
+    }
+
+    clock_t end_time = clock();
     float timeTaken = float(end_time - begin_time) / CLOCKS_PER_SEC;
     std::cout << "Time taken for one read call:" << timeTaken << std::endl;
     totalTimeTaken += timeTaken;
