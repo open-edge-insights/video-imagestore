@@ -27,6 +27,7 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"time"
 
 	"github.com/golang/glog"
 	uuid "github.com/google/uuid"
@@ -39,9 +40,22 @@ const bucketName string = "image-store-bucket"
 // Constant for the region in Minio
 const region string = "gateway"
 
+// Max number of buffers in the channel and workers for consuming it
+const (
+	maxBuffers int = 100
+	maxWorkers int = 100
+)
+
+// Struct for holding the buffers for the store workers
+type DataBuffer struct {
+	buffer []byte
+	key    string
+}
+
 // MinioStorage is a struct used to have default variables used for minio and to comprise methods of minio to it's scope
 type MinioStorage struct {
-	client *(minio.Client)
+	client   *(minio.Client)
+	dataChan chan DataBuffer
 }
 
 // missingKeyError is helper method for reporting a missing key in the Minio configuration
@@ -152,7 +166,15 @@ func NewMinioStorage(config map[string]string) (*MinioStorage, error) {
 		return nil, err
 	}
 
-	minioStorage := &MinioStorage{client: client}
+	// Creating data channel for store workers
+	dataChan := make(chan DataBuffer, maxBuffers)
+
+	minioStorage := &MinioStorage{client: client, dataChan: dataChan}
+
+	// Start store workers
+	for i := 0; i < maxWorkers; i++ {
+		go storeWorker(minioStorage)
+	}
 
 	glog.Infof("Initialization finished")
 	return minioStorage, nil
@@ -206,19 +228,12 @@ func (pMinioStorage *MinioStorage) Remove(keyname string) error {
 //    Returns an error object if store fails.
 func (pMinioStorage *MinioStorage) Store(data []byte) (string, error) {
 	key := generateKeyName()
-	buffer := bytes.NewBuffer(data)
-	buffLen := int64(buffer.Len())
 
-	go func() {
-		n, err := pMinioStorage.client.PutObject(bucketName, key, buffer,
-			buffLen, minio.PutObjectOptions{})
-		if err != nil {
-			glog.Errorf("Failed to put object into Minio for %s: %v", key, err)
-		}
-		if n < buffLen {
-			glog.Errorf("Failed to push all of the bytes to Minio for key %s", key)
-		}
-	}()
+	for len(pMinioStorage.dataChan) >= maxBuffers {
+		glog.Infof("Channel full. Waiting")
+		time.Sleep(10 * time.Millisecond)
+	}
+	pMinioStorage.dataChan <- DataBuffer{data, key}
 
 	return key, nil
 }
@@ -231,4 +246,30 @@ func (pMinioStorage *MinioStorage) Store(data []byte) (string, error) {
 func generateKeyName() string {
 	keyname := "persist_" + uuid.New().String()[:8]
 	return keyname
+}
+
+// storeWorker is the worker function storing data into the Minio DB
+// We start maxWorkers number of workers to ingest data to the DB.
+//
+// Parameters:
+// 1. pMinioStorage : MinioStorage
+//    Context of the Minio Image Store
+func storeWorker(pMinioStorage *MinioStorage) {
+
+	for {
+		buf := <-pMinioStorage.dataChan
+
+		buffer := bytes.NewBuffer(buf.buffer)
+		bufLen := int64(buffer.Len())
+
+		n, err := pMinioStorage.client.PutObject(bucketName, buf.key, buffer,
+			bufLen, minio.PutObjectOptions{})
+		if err != nil {
+			glog.Errorf("Failed to put object into Minio for %s: %v", buf.key, err)
+		}
+		if n < bufLen {
+			glog.Errorf("Failed to push all of the bytes to Minio for key %s", buf.key)
+		}
+
+	}
 }
