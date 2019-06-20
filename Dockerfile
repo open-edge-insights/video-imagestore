@@ -73,6 +73,7 @@ RUN git clone https://github.com/intel/safestringlib.git && \
     cd .. && \
     make -j8
 
+COPY Util/ ./Util/
 COPY ImageStore/ ./ImageStore
 COPY DataAgent/ ./DataAgent
 
