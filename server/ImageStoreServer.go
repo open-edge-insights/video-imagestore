@@ -14,32 +14,31 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package server
 
 import (
-	pb "IEdgeInsights/ImageStore/protobuff/go"
+	client "IEdgeInsights/DataAgent/da_grpc/client/go/client_internal"
+	util "IEdgeInsights/Util"
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	b64 "encoding/base64"
 	"io"
-	"path/filepath"
-
-	"context"
 	"net"
 	"os"
+	"path/filepath"
 	"strconv"
-
-	client "IEdgeInsights/DataAgent/da_grpc/client/go/client_internal"
-	imagestore "IEdgeInsights/ImageStore/go/ImageStore"
-	util "IEdgeInsights/Util"
 
 	"github.com/golang/glog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+
+	imagestore "IEdgeInsights/ImageStore/go/ImageStore"
+	pb "IEdgeInsights/ImageStore/protobuff/go"
 )
 
 var gRPCImageStoreHost = os.Getenv("IMAGESTORE_GRPC_SERVER")
 var gRPCImageStorePort = os.Getenv("IMAGESTORE_PORT")
 
 const (
-	chunkSize          = 4095 * 1024 // 4 MB
+	chunkSize = 4095 * 1024 // 4 MB
 )
 
 // Server Certificates
@@ -66,7 +65,6 @@ type IsServer struct {
 func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string]string) {
 
 	var s *grpc.Server
-	
 
 	defer glog.Flush()
 	if len(os.Args) < 1 {
@@ -74,7 +72,6 @@ func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string
 	}
 	addr := ":" + gRPCImageStorePort
 
-	
 	minioConfigMap["Host"] = os.Getenv("IMAGESTORE_GRPC_SERVER")
 	redisConfigMap["Host"] = minioConfigMap["Host"]
 
@@ -206,9 +203,11 @@ func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string
 // 1. error
 //    An error object if read fails.
 func (s *IsServer) Read(in *pb.ReadReq, srv pb.Is_ReadServer) error {
-	output, err := s.is.Read(in.ReadKeyname)
+	key := in.ReadKeyname
+	glog.V(1).Infof("Read request for key: %v", key)
+	output, err := s.is.Read(key)
 	if err != nil {
-		glog.Errorf("Read failed: %v", err)
+		glog.Errorf("Read failed: %v for key: %v", err, in.ReadKeyname)
 		return err
 	}
 
@@ -225,7 +224,8 @@ func (s *IsServer) Read(in *pb.ReadReq, srv pb.Is_ReadServer) error {
 				}
 				break
 			}
-			glog.Errorf("Error: %v", err)
+			glog.Errorf("Error for ioReader.Read(): %v for key: %v", err, key)
+			break
 		}
 		chnk.Chunk = outputByteArr[:n]
 		if err := srv.Send(chnk); err != nil {
@@ -252,7 +252,7 @@ func (s *IsServer) Store(rcv pb.Is_StoreServer) error {
 		point, err := rcv.Recv()
 		if err != nil {
 			if err == io.EOF {
-				glog.V(1).Infof("Transfer of %d bytes successful", len(blob))
+				glog.V(1).Infof("[Store]Transfer of %d bytes successful", len(blob))
 				break
 			}
 			glog.Errorf("Error while receiving: %v", err)
@@ -264,10 +264,10 @@ func (s *IsServer) Store(rcv pb.Is_StoreServer) error {
 	s.is.SetStorageType(memType)
 	output, err := s.is.Store(blob)
 	if err != nil {
-		glog.Infof("Store failed")
-		glog.Info("imgHandle of data stored is: ", output)
+		glog.Errorf("Store failed for key: %v", output)
 		return err
 	}
+	glog.V(1).Infof("ImgHandle of data stored is: %v", output)
 	return rcv.SendAndClose(&pb.StoreResp{
 		StoreKeyname: output,
 	})
@@ -288,11 +288,12 @@ func (s *IsServer) Store(rcv pb.Is_StoreServer) error {
 // 2. error
 //    An error object if remove fails.
 func (s *IsServer) Remove(ctx context.Context, in *pb.RemoveReq) (*pb.RemoveResp, error) {
-	errr := s.is.Remove(in.RemKeyname)
-	if errr != nil {
-		glog.Infof("gRPC Remove failed")
+	key := in.RemKeyname
+	err := s.is.Remove(key)
+	if err != nil {
+		glog.Infof("Remove failed: %v for key: %v", err, key)
 	}
-	return &pb.RemoveResp{}, errr
+	return &pb.RemoveResp{}, err
 }
 
 // CloseGrpcServer closes gRPC server

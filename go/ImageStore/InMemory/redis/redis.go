@@ -19,6 +19,7 @@ import (
 
 	"github.com/go-redis/redis"
 	uuid "github.com/google/uuid"
+
 )
 
 var client *redis.Client
@@ -64,7 +65,8 @@ func NewRedisConnect(config map[string]string) (*RedisConnect, error) {
 func (pRedisConnect *RedisConnect) Read(keyname string) (*io.Reader, error) {
 	binarydata, err := client.Get(keyname).Result()
 	if err == redis.Nil {
-		return nil, errors.New("Key Not Found")
+		errStr := "Key: " + keyname + " Not Found"
+		return nil, errors.New(errStr)
 	} else if err != nil {
 		return nil, err
 	}

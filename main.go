@@ -14,7 +14,6 @@ package main
 
 import (
 	client "IEdgeInsights/DataAgent/da_grpc/client/go/client_internal"
-	server "IEdgeInsights/ImageStore/server"
 	util "IEdgeInsights/Util"
 	cpuidutil "IEdgeInsights/Util/cpuid"
 	"flag"
@@ -25,13 +24,15 @@ import (
 
 	"github.com/golang/glog"
 	minio "github.com/minio/minio-go"
+
+	server "IEdgeInsights/ImageStore/server"
 )
 
 // grpc client certificates
 const (
-	RootCA        = "/etc/ssl/grpc_int_ssl_secrets/ca_certificate.pem"
-	ClientCert    = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_certificate.pem"
-	ClientKey     = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_key.pem"
+	RootCA     = "/etc/ssl/grpc_int_ssl_secrets/ca_certificate.pem"
+	ClientCert = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_certificate.pem"
+	ClientKey  = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_key.pem"
 )
 
 func main() {
@@ -65,14 +66,14 @@ func main() {
 
 	if err != nil {
 		glog.Errorf("Error while obtaining GrpcClient object...")
-                os.Exit(-1)
+		os.Exit(-1)
 	}
 
 	configRedis := "RedisCfg"
 	respMapRedis, err := grpcClient.GetConfigInt(configRedis)
 	if err != nil {
 		glog.Errorf("GetConfigInt failed for Redis...")
-                os.Exit(-1)
+		os.Exit(-1)
 	}
 	configMinio := "MinioCfg"
 	respMapMinio, err := grpcClient.GetConfigInt(configMinio)
@@ -102,7 +103,7 @@ func StartRedis(redisConfigMap map[string]string) {
 	err := cmd.Run()
 	if err != nil {
 		glog.Errorf("Not able to start redis server: %v", err)
-                os.Exit(-1)
+		os.Exit(-1)
 	}
 }
 
@@ -119,11 +120,11 @@ func StartMinio(minioConfigMap map[string]string) {
 	glog.Infof("Minio port: %v", minioPort)
 	// TODO: Need to see a way to pass port while bring
 	// as --address switch didn't work as expected
-	cmd := exec.Command("./minio", "server", "--address", "127.0.0.1:" + os.Getenv("MINIO_PORT"), "/data")
+	cmd := exec.Command("./minio", "server", "--address", "127.0.0.1:"+os.Getenv("MINIO_PORT"), "/data")
 	err := cmd.Run()
 	if err != nil {
 		glog.Errorf("Not able to start minio server: %v", err)
-                os.Exit(-1)
+		os.Exit(-1)
 	}
 }
 
@@ -135,7 +136,7 @@ func StartMinio(minioConfigMap map[string]string) {
 func missingKeyError(key string) {
 	msg := "Minio config missing key: " + key
 	glog.Errorf(msg)
-        return
+	return
 }
 
 // StartMinioRetentionPolicy cleans up the ImageStore
@@ -144,13 +145,14 @@ func missingKeyError(key string) {
 // 1. config : map[string]string
 //    Refers to the minio config
 func StartMinioRetentionPolicy(config map[string]string) {
+	defer glog.Flush()
 	glog.Infof("Running minio retention policy")
 
 	minioPort := os.Getenv("MINIO_PORT")
 	portUp := util.CheckPortAvailability("", minioPort)
 	if !portUp {
 		glog.Errorf("Minio port: %s not up, so exiting...", minioPort)
-                os.Exit(-1)
+		os.Exit(-1)
 	}
 
 	region := "gateway"
@@ -165,7 +167,7 @@ func StartMinioRetentionPolicy(config map[string]string) {
 	retentionTime, err := time.ParseDuration(retentionTimeStr)
 	if err != nil {
 		glog.Errorf("Failed to parse retention time duration: %v", err)
-                os.Exit(-1)
+		os.Exit(-1)
 	}
 
 	pollIntervalStr, ok := config["RetentionPollInterval"]
@@ -207,7 +209,7 @@ func StartMinioRetentionPolicy(config map[string]string) {
 	} else {
 		msg := "Ssl key in Minio config must be true or false, not :" + sslStr
 		glog.Errorf(msg)
-                os.Exit(-1)
+		os.Exit(-1)
 	}
 
 	glog.V(1).Infof("Config: Host=%s, Port=%s, ssl=%v", host, port, ssl)
@@ -216,7 +218,7 @@ func StartMinioRetentionPolicy(config map[string]string) {
 		host+":"+port, accessKey, secretKey, ssl, region)
 	if err != nil {
 		glog.Errorf("Failed to connect to Minio server: %v", err)
-                os.Exit(-1)
+		os.Exit(-1)
 	}
 
 	// Check if the bucket exists
@@ -224,7 +226,7 @@ func StartMinioRetentionPolicy(config map[string]string) {
 	found, err := client.BucketExists(bucketName)
 	if err != nil {
 		glog.Errorf("Failed to verify existence of bucket: %v", err)
-                os.Exit(-1)
+		os.Exit(-1)
 	}
 
 	if !found {
@@ -234,51 +236,55 @@ func StartMinioRetentionPolicy(config map[string]string) {
 	}
 
 	// Channel for objects to be removed from Minio
-	objectsCh := make(chan string)
-	objectsErrCh := make(chan error, 1)
-	defer close(objectsErrCh)
+	removeObjects := func() {
+		objectsCh := make(chan string)
+		objectsErrCh := make(chan error, 1)
+		defer close(objectsErrCh)
 
-	// Routine to find objects to remove and send them over the `objectsCh`
-	go func() {
-		glog.V(1).Infof("Finding objects in Minio to delete")
+		// Routine to find objects to remove and send them over the `objectsCh`
+		go func() {
+			glog.V(1).Infof("Finding objects in Minio to delete")
 
-		// Defer channel close to when the function exits
-		defer close(objectsCh)
+			// Defer channel close to when the function exits
+			defer close(objectsCh)
 
-		for obj := range client.ListObjects(bucketName, "", false, nil) {
-			if obj.Err != nil {
-				glog.Errorf("Failed retrieving objects from Minio: %v", obj.Err)
-				objectsErrCh <- obj.Err
-				return
+			for obj := range client.ListObjects(bucketName, "", false, nil) {
+				if obj.Err != nil {
+					glog.Errorf("Failed retrieving objects from Minio: %v", obj.Err)
+					objectsErrCh <- obj.Err
+					return
+				}
+
+				now := time.Now()
+				elapsed := now.Sub(obj.LastModified)
+
+				if elapsed > retentionTime {
+					glog.V(1).Infof("Deleting key: %s", obj.Key)
+					objectsCh <- obj.Key
+				} else {
+					glog.V(2).Infof("Not deleting key: %s", obj.Key)
+				}
 			}
 
-			now := time.Now()
-			elapsed := now.Sub(obj.LastModified)
+			objectsErrCh <- nil
+		}()
 
-			if elapsed > retentionTime {
-				glog.V(1).Infof("Deleting key: %s", obj.Key)
-				objectsCh <- obj.Key
-			} else {
-				glog.V(2).Infof("Not deleting key: %s", obj.Key)
-			}
+		for rErr := range client.RemoveObjects(bucketName, objectsCh) {
+			glog.Errorf("Error removing objects from Minio: %v", rErr)
+			return
 		}
 
-		objectsErrCh <- nil
-	}()
-
-	for rErr := range client.RemoveObjects(bucketName, objectsCh) {
-		glog.Errorf("Error removing objects from Minio: %v", rErr)
-                os.Exit(-1)
+		if err := <-objectsErrCh; err != nil {
+			return
+		}
 	}
+	ticker := time.NewTicker(pollInterval)
+	defer ticker.Stop()
 
-	if err := <-objectsErrCh; err != nil {
-		os.Exit(-1)
+	removeObjects()
+
+	for range ticker.C {
+		removeObjects()
 	}
-
-	// Start timer for next clean up
-	time.AfterFunc(
-		time.Duration(pollInterval), func() {
-			glog.V(1).Infof("Executing retention policy")
-			StartMinioRetentionPolicy(config)
-		})
+	glog.Infof("Exiting StartMinioRetentionPolicy()...")
 }
