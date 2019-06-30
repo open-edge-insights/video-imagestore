@@ -35,7 +35,7 @@ import (
 // Storage is a struct used to comprise all Persistent package methods in it's scope
 type Storage interface {
 	// Read the given key from stroage
-	Read(keyname string) (*io.Reader, error)
+	Read(keyname string) (io.ReadCloser, error)
 
 	// Remove the given key from the storage
 	Remove(keyname string) error
@@ -116,7 +116,7 @@ func GetConfgKey(storageType string) (string, error) {
 //    Returns an instance of io.Reader object of the consolidated image handle.
 // 2. error
 //    Returns an error object if read fails.
-func (pStorage *Persistent) Read(keyname string) (*io.Reader, error) {
+func (pStorage *Persistent) Read(keyname string) (io.ReadCloser, error) {
 	return pStorage.storage.Read(keyname)
 }
 

@@ -214,7 +214,7 @@ func (s *IsServer) Read(in *pb.ReadReq, srv pb.Is_ReadServer) error {
 	chnk := &pb.ReadResp{}
 	outputByteArr := make([]byte, chunkSize)
 	for {
-		n, err := (*output).Read(outputByteArr)
+		n, err := (output).Read(outputByteArr)
 		if err != nil {
 			if err == io.EOF {
 				// This is to send the last remaining chunk
@@ -232,6 +232,8 @@ func (s *IsServer) Read(in *pb.ReadReq, srv pb.Is_ReadServer) error {
 			return err
 		}
 	}
+	output.Close()
+	output = nil
 	return nil
 }
 

@@ -14,6 +14,7 @@ package redis
 import (
 	"errors"
 	"io"
+	"io/ioutil"
 	"strings"
 	"time"
 
@@ -62,7 +63,7 @@ func NewRedisConnect(config map[string]string) (*RedisConnect, error) {
 //    Returns an instance of io.Reader object of the consolidated image handle.
 // 2. error
 //    Returns an error object if read fails.
-func (pRedisConnect *RedisConnect) Read(keyname string) (*io.Reader, error) {
+func (pRedisConnect *RedisConnect) Read(keyname string) (io.ReadCloser, error) {
 	binarydata, err := client.Get(keyname).Result()
 	if err == redis.Nil {
 		errStr := "Key: " + keyname + " Not Found"
@@ -71,8 +72,8 @@ func (pRedisConnect *RedisConnect) Read(keyname string) (*io.Reader, error) {
 		return nil, err
 	}
 	outputStr := strings.NewReader(binarydata)
-	data := io.Reader(outputStr)
-	return &data, nil
+	data := ioutil.NopCloser(outputStr)
+	return data, nil
 }
 
 // Remove is used to remove the stored data from Redis.

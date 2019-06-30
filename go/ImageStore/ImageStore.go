@@ -170,7 +170,7 @@ func (pImageStore *ImageStore) SetStorageType(memoryType string) error {
 //    Returns the image of the consolidated image handle.
 // 2. error
 //    Returns an error object if read fails.
-func (pImageStore *ImageStore) Read(keyname string) (*io.Reader, error) {
+func (pImageStore *ImageStore) Read(keyname string) (io.ReadCloser, error) {
 	if strings.Contains(keyname, inMemKeyPattern) {
 		return pImageStore.inMemory.Read(keyname)
 	} else if strings.Contains(keyname, persistKeyPattern) {

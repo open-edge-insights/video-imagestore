@@ -191,15 +191,15 @@ func NewMinioStorage(config map[string]string) (*MinioStorage, error) {
 //    Returns the ip.Reader instance.
 // 2. error
 //    Returns an error object if read fails.
-func (pMinioStorage *MinioStorage) Read(keyname string) (*io.Reader, error) {
+func (pMinioStorage *MinioStorage) Read(keyname string) (io.ReadCloser, error) {
 	// Get the object from the store
 	obj, err := pMinioStorage.client.GetObject(
 		bucketName, keyname, minio.GetObjectOptions{})
 	if err != nil {
 		return nil, err
 	}
-	data := io.Reader(obj)
-	return &data, nil
+	data := io.ReadCloser(obj)
+	return data, nil
 }
 
 // Remove is used to remove the data from Minio.
@@ -259,7 +259,7 @@ func storeWorker(pMinioStorage *MinioStorage) {
 	for {
 		buf := <-pMinioStorage.dataChan
 
-		buffer := bytes.NewBuffer(buf.buffer)
+		buffer := bytes.NewReader(buf.buffer)
 		bufLen := int64(buffer.Len())
 
 		n, err := pMinioStorage.client.PutObject(bucketName, buf.key, buffer,
@@ -270,6 +270,7 @@ func storeWorker(pMinioStorage *MinioStorage) {
 		if n < bufLen {
 			glog.Errorf("Failed to push all of the bytes to Minio for key %s", buf.key)
 		}
-
+		buffer = nil
+		buf.buffer = nil
 	}
 }

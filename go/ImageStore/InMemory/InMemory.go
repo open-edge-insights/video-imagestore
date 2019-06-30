@@ -69,7 +69,7 @@ func NewInmemory(config map[string]string) (*InMemory, error) {
 //    Returns an instance of io.Reader object of the consolidated image handle.
 // 2. error
 //    Returns an error message if read fails.
-func (pInMemory *InMemory) Read(keyname string) (*io.Reader, error) {
+func (pInMemory *InMemory) Read(keyname string) (io.ReadCloser, error) {
 	return pInMemory.redisConnect.Read(keyname)
 }
 
