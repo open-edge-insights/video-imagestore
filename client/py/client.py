@@ -106,11 +106,15 @@ class GrpcImageStoreClient(object):
         '''
 
         log.debug("Inside Read() client wrapper...")
-        response = self.stub.Read(is_pb2.ReadReq(readKeyname=imgHandle),
-                                  timeout=1000)
-        outputBytes = b''
-        for resp in response:
-            outputBytes += resp.chunk
+        try:
+            response = self.stub.Read(is_pb2.ReadReq(readKeyname=imgHandle),
+                                    timeout=1000)
+            outputBytes = b''
+            for resp in response:
+                outputBytes += resp.chunk
+        except Exception:
+            log.error("Read failed.")
+            return None
         log.debug("Sending the response to the caller...")
         return outputBytes
 
@@ -128,8 +132,13 @@ class GrpcImageStoreClient(object):
         '''
 
         log.debug("Inside Store() client wrapper...")
-        data = self._chunkfunction(byteStream, memType)
-        response = self.stub.Store(data, timeout=1000)
+        try:
+            data = self._chunkfunction(byteStream, memType)
+            response = self.stub.Store(data, timeout=1000)
+        except Exception:
+            log.error("Store failed.")
+            return None
+
         log.debug("Sending the response to the caller...")
         if "|" in response.storeKeyname:
             imgHandle_list = response.storeKeyname.split("|")
