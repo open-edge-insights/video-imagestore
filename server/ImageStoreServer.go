@@ -144,9 +144,9 @@ func StartGrpcServer(redisConfigMap map[string]string, minioConfigMap map[string
 		})
 
 		//Create the gRPC server
-		s = grpc.NewServer(grpc.Creds(creds))
+		s = grpc.NewServer(grpc.Creds(creds), grpc.MaxConcurrentStreams(1))
 	} else {
-		s = grpc.NewServer()
+		s = grpc.NewServer(grpc.MaxConcurrentStreams(1))
 	}
 
 	lis, err := net.Listen("tcp", addr)

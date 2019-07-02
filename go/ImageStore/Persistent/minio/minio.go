@@ -27,7 +27,6 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"time"
 
 	"github.com/golang/glog"
 	uuid "github.com/google/uuid"
@@ -229,10 +228,6 @@ func (pMinioStorage *MinioStorage) Remove(keyname string) error {
 func (pMinioStorage *MinioStorage) Store(data []byte) (string, error) {
 	key := generateKeyName()
 
-	for len(pMinioStorage.dataChan) >= maxBuffers {
-		glog.Infof("Channel full. Waiting")
-		time.Sleep(10 * time.Millisecond)
-	}
 	pMinioStorage.dataChan <- DataBuffer{data, key}
 
 	return key, nil
