@@ -28,8 +28,9 @@ import (
 	"errors"
 	"io"
 
+	//"time"
+
 	"github.com/golang/glog"
-	uuid "github.com/google/uuid"
 	minio "github.com/minio/minio-go"
 )
 
@@ -172,7 +173,13 @@ func NewMinioStorage(config map[string]string) (*MinioStorage, error) {
 
 	// Start store workers
 	for i := 0; i < maxWorkers; i++ {
-		go storeWorker(minioStorage)
+		client, err := initClient(config)
+
+		if err != nil {
+			// Error has already been logged
+			return nil, err
+		}
+		go storeWorker(minioStorage, client)
 	}
 
 	glog.Infof("Initialization finished")
@@ -225,22 +232,9 @@ func (pMinioStorage *MinioStorage) Remove(keyname string) error {
 //    Returns the image handle of the image stored.
 // 2. error
 //    Returns an error object if store fails.
-func (pMinioStorage *MinioStorage) Store(data []byte) (string, error) {
-	key := generateKeyName()
-
+func (pMinioStorage *MinioStorage) Store(data []byte, key string) (string, error) {
 	pMinioStorage.dataChan <- DataBuffer{data, key}
-
 	return key, nil
-}
-
-// generateKeyName is used to generate the keyname
-//
-// Returns:
-// 1. string
-//    Returns an unique uuid.
-func generateKeyName() string {
-	keyname := "persist_" + uuid.New().String()[:8]
-	return keyname
 }
 
 // storeWorker is the worker function storing data into the Minio DB
@@ -249,16 +243,16 @@ func generateKeyName() string {
 // Parameters:
 // 1. pMinioStorage : MinioStorage
 //    Context of the Minio Image Store
-func storeWorker(pMinioStorage *MinioStorage) {
+func storeWorker(pMinioStorage *MinioStorage, client *(minio.Client)) {
 
 	for {
 		buf := <-pMinioStorage.dataChan
 
 		buffer := bytes.NewReader(buf.buffer)
 		bufLen := int64(buffer.Len())
-
-		n, err := pMinioStorage.client.PutObject(bucketName, buf.key, buffer,
+		n, err := client.PutObject(bucketName, buf.key, buffer,
 			bufLen, minio.PutObjectOptions{})
+
 		if err != nil {
 			glog.Errorf("Failed to put object into Minio for %s: %v", buf.key, err)
 		}

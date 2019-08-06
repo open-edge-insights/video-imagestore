@@ -13,98 +13,288 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package main
 
 import (
-	client "IEdgeInsights/DataAgent/da_grpc/client/go/client_internal"
+	eismsgbus "EISMessageBus/eismsgbus"
+	common "IEdgeInsights/ImageStore/common"
+	configManager "IEdgeInsights/ImageStore/configManager"
+	imagestore "IEdgeInsights/ImageStore/go/ImageStore"
+	subManager "IEdgeInsights/ImageStore/subManager"
 	util "IEdgeInsights/Util"
 	cpuidutil "IEdgeInsights/Util/cpuid"
 	"flag"
+	"io"
 	"os"
 	"os/exec"
-	"strconv"
+	"strings"
 	"time"
+	"strconv"
 
 	"github.com/golang/glog"
 	minio "github.com/minio/minio-go"
-
-	server "IEdgeInsights/ImageStore/server"
 )
 
-// grpc client certificates
 const (
-	RootCA     = "/etc/ssl/grpc_int_ssl_secrets/ca_certificate.pem"
-	ClientCert = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_certificate.pem"
-	ClientKey  = "/etc/ssl/grpc_int_ssl_secrets/grpc_internal_client_key.pem"
+	chunkSize    = 1024 * 1024 * 8  // 8 MB
+	maxFrameSize = 1024 * 1024 * 64 // 64MB
 )
+
+// IsServer is a struct used to implement ImageStore.IsServer
+type IsServer struct {
+	is *imagestore.ImageStore
+}
 
 func main() {
-	// Wait for DA to be up
+
 	flag.Parse()
-	daServiceName := os.Getenv("DATA_AGENT_GRPC_SERVER")
-	daPort := os.Getenv("GRPC_INTERNAL_PORT")
 	glog.Infof("=============== STARTING imagestore ===============")
-	var grpcClient *client.GrpcInternalClient
-	var err error
 
 	vendor_name := cpuidutil.Cpuid()
 	if vendor_name != "GenuineIntel" {
-		glog.Infof("*****Software runs only on Intel's hardware*****")
+		glog.Errorf("*****Software runs only on Intel's hardware*****")
+		os.Exit(-1)
+	}
+
+	common.DevMode, _ = strconv.ParseBool(os.Getenv("DEV_MODE"))
+	minIoConfig, err := configManager.ReadMinIoConfig()
+	if err != nil {
+		glog.Errorf("Error while reading config :" + err.Error())
 		os.Exit(-1)
 	}
 
 	defer glog.Flush()
-	ret := util.CheckPortAvailability(daServiceName, daPort)
-	if !ret {
-		glog.Error("DataAgent is not up, so exiting...")
-		os.Exit(-1)
-	}
-	Mode := os.Getenv("DEV_MODE")
-	devMode, err := strconv.ParseBool(Mode)
-	if !devMode {
-		grpcClient, err = client.NewGrpcInternalClient(ClientCert, ClientKey, RootCA, daServiceName, daPort)
-	} else {
-		grpcClient, err = client.NewGrpcInternalClientUnsecured(daServiceName, daPort)
-	}
+	respMapMinio := make(map[string]string)
+	// Converting struct to MapchunkSize
+	respMapMinio["AccessKey"] = minIoConfig.AccessKey
+	respMapMinio["SecretKey"] = minIoConfig.SecretKey
+	respMapMinio["RetentionTime"] = minIoConfig.RetentionTime
+	respMapMinio["RetentionPollInterval"] = minIoConfig.RetentionPollInterval
+	respMapMinio["Ssl"] = minIoConfig.Ssl
+	respMapMinio["Port"] = common.MinioPort
+	respMapMinio["Host"] = common.MinioHost
+	respMapMinio["ReplyEndpoint"] = minIoConfig.ReplyEndpoint
 
-	if err != nil {
-		glog.Errorf("Error while obtaining GrpcClient object...")
-		os.Exit(-1)
-	}
-
-	configRedis := "RedisCfg"
-	respMapRedis, err := grpcClient.GetConfigInt(configRedis)
-	if err != nil {
-		glog.Errorf("GetConfigInt failed for Redis...")
-		os.Exit(-1)
-	}
-	configMinio := "MinioCfg"
-	respMapMinio, err := grpcClient.GetConfigInt(configMinio)
-	if err != nil {
-		glog.Errorf("GetConfigInt failed for Minio...")
-		os.Exit(-1)
-	}
-
-	glog.Infof("**************STARTING IMAGESTORE GRPC SERVER**************")
 	done := make(chan bool)
-	go StartRedis(respMapRedis)
+
+	serviceConfig, err := configManager.ReadServiceConfig()
+	if err != nil {
+		glog.Errorf("Error in processing the serviceConfig")
+		os.Exit(-1)
+	}
+
 	go StartMinio(respMapMinio)
 	go StartMinioRetentionPolicy(respMapMinio)
-	go server.StartGrpcServer(respMapRedis, respMapMinio)
+	go startReqReply(respMapMinio, serviceConfig)
+	go startSubScriber(respMapMinio)
 	<-done
 	glog.Infof("**************Exiting**************")
 }
 
-// StartRedis starts the redis server
-//
-// Parameters:
-// 1. redisConfigMap : map[string]string
-//    Refers to the redis config.
-func StartRedis(redisConfigMap map[string]string) {
-	redisPort := os.Getenv("REDIS_PORT")
-	cmd := exec.Command("redis-server", "--port", redisPort, "--requirepass", redisConfigMap["Password"], "--bind", "127.0.0.1")
-	err := cmd.Run()
-	if err != nil {
-		glog.Errorf("Not able to start redis server: %v", err)
+func startSubScriber(minioConfigMap map[string]string) {
+
+	glog.Infof("**************In startSubScriber**************")
+
+	topics := os.Getenv("SubTopics")
+	topicArray := strings.Split(topics, ",")
+
+	if len(topicArray) <= 0 {
+		glog.Errorf("suscriber list empty")
 		os.Exit(-1)
 	}
+
+	subConfig, err := configManager.ReadSubConfig(topicArray)
+	if err != nil {
+		glog.Errorf("Error in processing the config")
+		os.Exit(-1)
+	}
+
+	subMgr := subManager.NewSubManager()
+	subMgr.RegSubscriberList(subConfig)
+	subMgr.StartAllSubscribers(topicArray)
+
+	for _, topic := range topicArray {
+		is, err := imagestore.GetImageStoreInstance(minioConfigMap)
+		if err != nil {
+			glog.Errorf("%v", err)
+		}
+		subMgr.RegWriterInterface(topic, is)
+	}
+	subMgr.ReceiveFromAll()
+}
+
+func startReqReply(minioConfigMap map[string]string, serviceConfig map[string]interface{}) {
+
+	var ser IsServer
+	is, err := imagestore.GetImageStoreInstance(minioConfigMap)
+	ser.is = is
+	if err != nil {
+		glog.Errorf("Error while GetImageStoreInstance %v", err)
+		os.Exit(-1)
+	}
+
+	client, err := eismsgbus.NewMsgbusClient(serviceConfig)
+	if err != nil {
+		glog.Errorf("-- Error initializing message bus context: %v\n", err)
+		os.Exit(-1)
+	}
+	defer client.Close()
+	
+	serviceName := os.Getenv("AppName")
+	glog.Infof("-- Initializing service %s\n", serviceName)
+	service, err := client.NewService(serviceName)
+	if err != nil {
+		glog.Errorf("-- Error initializing service: %v\n", err)
+		os.Exit(-1)
+	}
+	defer service.Close()
+
+	glog.Infof("-- Running service %s\n", serviceName)
+
+	for {
+		var errMessage string
+		msg, err := service.ReceiveRequest(-1)
+
+		if err != nil {
+			errMessage = "-- Error receiving request: " + err.Error()
+			glog.Errorf(errMessage)
+			continue
+		}
+		command, ok := msg.Data[common.Command].(string)
+		if ok == false {
+			errMessage = "Missing " + common.Command
+			handleError(service, errMessage)
+			continue
+		}
+
+		imgHandle, ok := msg.Data[common.ImageHandle].(string)
+		if ok == false {
+			errMessage += "Missing " + common.ImageHandle
+			handleError(service, errMessage)
+			continue
+		}
+
+		if len(errMessage) > 0 {
+			handleError(service, errMessage)
+		} else if command == common.ReadCode {
+			handleReadCommand(imgHandle, service, ser)
+		} else if command == common.StoreCode {
+			if msg.Blob != nil {
+				handleStoreCommand(imgHandle, service, ser, msg.Blob)
+			} else {
+				errMessage = "Can not store empty image for handle " + imgHandle
+				handleError(service, errMessage)
+			}
+		} else {
+			errMessage = "Invalid Command " + command
+			handleError(service, errMessage)
+		}
+	}
+}
+
+func handleError(service *eismsgbus.Service, errMessage string) {
+	glog.Errorf(errMessage)
+	service.Response(map[string]interface{}{common.Error: errMessage})
+}
+
+func handleReadCommand(imgHandle string, service *eismsgbus.Service, ser IsServer) {
+
+	frame, err := ser.Read(imgHandle)
+
+	if err != nil {
+		error := "Reading image failed for handle " + imgHandle + " Error :" + err.Error()
+		glog.Errorf(error)
+		service.Response(map[string]interface{}{common.Error: error})
+	} else {
+		response := make([]interface{}, 2)
+		response[0] = map[string]interface{}{common.ImageHandle: imgHandle}
+		response[1] = frame
+		service.Response(response)
+		message := "Successfully read frame with handle:" + imgHandle
+		glog.Infof(message)
+	}
+}
+
+func handleStoreCommand(imgHandle string, service *eismsgbus.Service, ser IsServer, imgFrame []byte) {
+	key, err := ser.StoreData(imgFrame, imgHandle)
+	if err != nil {
+		error := "Store image failed for handle " + imgHandle + " Error :" + err.Error()
+		glog.Errorf(error)
+		service.Response(map[string]interface{}{common.Error: error})
+	} else {
+		service.Response(map[string]interface{}{common.ImageHandle: key})
+		message := "Successfully stored frame with handle:" + imgHandle
+		glog.Infof(message)
+	}
+}
+
+// StoreData is used to store image buffer in minio.
+//
+// 1. keyname : []byte
+//    Refers to the image frame to be stored.
+// 2. keyname : string
+//    Refers to the image handle of the image to be stored.
+//
+// Returns:
+// 1. error
+//    Returns an error object if store fails.
+func (s *IsServer) StoreData(blob []byte, keyname string) (string, error) {
+	key, err := s.is.Store(blob, keyname)
+	if err != nil {
+		glog.Errorf("Store failed")
+		return "", err
+	}
+	return key, nil
+}
+
+// Read is used to read image buffer from minio.
+//
+// Parameters:
+// 1. keyname : string
+//    Refers to the image handle of the image to be read.
+//
+// Returns:
+// 1. []byte
+//    Returns the byte array of image buffer.
+// 2. error
+//    Returns an error object if read fails.
+func (s *IsServer) Read(key string) ([]byte, error) {
+	output, err := s.is.Read(key)
+	if err != nil {
+		glog.Errorf("Read failed: %v", err)
+		return nil, err
+	}
+
+	buf_len := 0
+	buf := make([]byte, chunkSize, maxFrameSize)
+	outputByteArr := make([]byte, chunkSize)
+	for {
+		// TODO : if len(output handle data) > outputByteArr,
+		// Read API crashes. This need to be fixed.
+		// Currently the 8MB is max size of image
+		n, err := (output).Read(outputByteArr)
+		if err != nil {
+			if err == io.EOF {
+				// This is to send the last remaining chunk
+				copy(buf[buf_len:n], outputByteArr[:n])
+				buf_len += n
+				break
+			}
+			glog.Errorf("Error for ioReader.Read(): %v for key: %v \n", err, key)
+			break
+		}
+		break
+		copy(buf[buf_len:n], outputByteArr[0:n])
+		buf_len += n
+	}
+
+	output.Close()
+	output = nil
+
+	var outputBuff []byte
+	if buf_len > 0 {
+		outputBuff = make([]byte, buf_len)
+		copy(outputBuff, buf[0:buf_len])
+	}
+
+	return outputBuff, nil
 }
 
 // StartMinio starts the minio server.
@@ -116,11 +306,11 @@ func StartMinio(minioConfigMap map[string]string) {
 	os.Setenv("MINIO_ACCESS_KEY", minioConfigMap["AccessKey"])
 	os.Setenv("MINIO_SECRET_KEY", minioConfigMap["SecretKey"])
 	os.Setenv("MINIO_REGION", "gateway")
-	minioPort := os.Getenv("MINIO_PORT")
-	glog.Infof("Minio port: %v", minioPort)
-	// TODO: Need to see a way to pass port while bring
+	glog.Infof("Minio port: %v\n", common.MinioPort)
+
+	// TODO: Need to see a way to pass port while bring 
 	// as --address switch didn't work as expected
-	cmd := exec.Command("./minio", "server", "--address", "127.0.0.1:"+os.Getenv("MINIO_PORT"), "/data")
+	cmd := exec.Command("./minio", "server", "--address", common.MinioHost+":"+common.MinioPort, "/data")
 	err := cmd.Run()
 	if err != nil {
 		glog.Errorf("Not able to start minio server: %v", err)
@@ -147,8 +337,7 @@ func missingKeyError(key string) {
 func StartMinioRetentionPolicy(config map[string]string) {
 	defer glog.Flush()
 	glog.Infof("Running minio retention policy")
-
-	minioPort := os.Getenv("MINIO_PORT")
+	minioPort := common.MinioPort
 	portUp := util.CheckPortAvailability("", minioPort)
 	if !portUp {
 		glog.Errorf("Minio port: %s not up, so exiting...", minioPort)
@@ -157,7 +346,8 @@ func StartMinioRetentionPolicy(config map[string]string) {
 
 	region := "gateway"
 	bucketName := "image-store-bucket"
-	host := "localhost"
+	port := common.MinioPort
+	host := common.MinioHost
 
 	retentionTimeStr, ok := config["RetentionTime"]
 	if !ok {
@@ -179,11 +369,6 @@ func StartMinioRetentionPolicy(config map[string]string) {
 	if err != nil {
 		glog.Errorf("Failed to parse retention poll interval duration: %v", err)
 		os.Exit(-1)
-	}
-
-	port, ok := config["Port"]
-	if !ok {
-		missingKeyError("Port")
 	}
 
 	accessKey, ok := config["AccessKey"]

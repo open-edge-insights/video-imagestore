@@ -28,7 +28,6 @@ import (
 	"errors"
 	"io"
 	"strings"
-
 	"github.com/golang/glog"
 )
 
@@ -42,7 +41,7 @@ type Storage interface {
 
 	// Store the given byte array to the storage and return the key under which
 	// it is not being stored.
-	Store(data []byte) (string, error)
+	Store(data []byte, key string) (string, error)
 }
 
 // Persistent storage structure
@@ -58,8 +57,6 @@ const MINIO string = "minio"
 // Parameters:
 // 1. storageType : string
 //    Returns the ImageStore storage type.
-//    It can either be inmemory or persistent to store the buffer
-//    in Redis or Minio respectively.
 // 2. config : map[string]string
 //    Refers to the persistent config.
 //
@@ -144,6 +141,6 @@ func (pStorage *Persistent) Remove(keyname string) error {
 //    Returns the image handle of the image stored.
 // 2. error
 //    Returns an error object if store fails.
-func (pStorage *Persistent) Store(data []byte) (string, error) {
-	return pStorage.storage.Store(data)
+func (pStorage *Persistent) Store(data []byte, key string) (string, error) {
+	return pStorage.storage.Store(data, key)
 }
