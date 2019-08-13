@@ -1,6 +1,6 @@
 # ImageStore dockerfile
-ARG IEI_VERSION
-FROM ia_gobase:$IEI_VERSION
+ARG EIS_VERSION
+FROM ia_gobase:$EIS_VERSION
 
 RUN mkdir -p ${GO_WORK_DIR}/log && \
     apt-get update
@@ -39,35 +39,11 @@ RUN wget https://dl.minio.io/server/minio/release/linux-amd64/archive/minio.${MI
 RUN mv minio.${MINIO_VERSION} minio
 RUN chmod +x minio
 
-ARG IEI_UID
+ARG EIS_UID
 # Adding cert dirs
 RUN mkdir -p /etc/ssl/imagestore && \
     mkdir /.minio && \
-    chown -R ${IEI_UID} /.minio
-
-
-# Building safestringlib
-ENV SAFESTRING_VER 77b772849eda2321fb0dca56a321e3939930d7b9
-ENV MAX_SAFESTRING_SIZE 60
-RUN git clone https://github.com/intel/safestringlib.git && \
-    cd safestringlib && \
-    git checkout ${SAFESTRING_VER} && \
-    cd include && \
-    sed -i "/RSIZE_MAX_STR/c\#define RSIZE_MAX_STR      ( ${MAX_SAFESTRING_SIZE}UL << 10 )      /* ${MAX_SAFESTRING_SIZE}KB */" "safe_str_lib.h" && \
-    cd .. && \
-    make -j8
-
-COPY Util/ ./Util/
-
-# These flags are needed for enabling security while compiling and linking with cpuidcheck in golang
-ENV CGO_CFLAGS "$CGO_FLAGS -O2 -D_FORTIFY_SOURCE=2 -Werror=format-security -fstack-protector-strong -fPIC"
-ENV CGO_LDFLAGS "$CGO_LDFLAGS -z noexecstack -z relro -z now"
-# Copying safestringlib to Util
-RUN cd safestringlib && \
-    cp -rf libsafestring.a ${GO_WORK_DIR}/Util/cpuid
-
-RUN cd Util/cpuid && \
-    make -j8
+    chown -R ${EIS_UID} /.minio
 
 ENV GO_X_NET ${GOPATH}/src/golang.org/x/net
 RUN mkdir -p ${GO_X_NET} && \
@@ -87,8 +63,8 @@ RUN mkdir -p ${GO_X_SYS} && \
     cd ${GO_X_SYS} && \
     git checkout -b known_version d0be0721c37eeb5299f245a996a483160fc36940
 
-COPY libs/EISMessageBus ./libs/EISMessageBus
-RUN cd /IEI/go/src/IEdgeInsights/libs/EISMessageBus && \
+
+RUN cd /EIS/go/src/IEdgeInsights/libs/EISMessageBus && \
     rm -rf build deps && mkdir -p build && cd build && \
     cmake -DWITH_GO=ON .. && \
     make && \
@@ -101,13 +77,16 @@ ENV CGO_CFLAGS -I$MSGBUS_DIR/include/
 ENV CGO_LDFLAGS "$CGO_LDFLAGS -L$MSGBUS_DIR/build -leismsgbus"
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/usr/local/lib
 
-RUN ln -s /IEI/go/src/IEdgeInsights/libs/EISMessageBus/go/EISMessageBus/ $GOPATH/src/EISMessageBus
 
-COPY libs/common/go ./libs/common/go
-COPY libs/ConfigManager ./libs/ConfigManager
+ADD main.go ./ImageStore/main.go
+ADD common ./ImageStore/common
+ADD configManager ./ImageStore/configManager
+ADD go ./ImageStore/go
+ADD subManager ./ImageStore/subManager
 
-COPY ImageStore/ ./ImageStore
-RUN go build -o /IEI/go/src/IEdgeInsights/ImageStore/main ImageStore/main.go
+
+
+RUN go build -o /EIS/go/src/IEdgeInsights/ImageStore/main ImageStore/main.go
 
 ENTRYPOINT ["./ImageStore/main"]
 CMD ["-stderrthreshold", ${GO_LOG_LEVEL}, "-v", ${GO_VERBOSE}]
