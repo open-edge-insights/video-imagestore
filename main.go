@@ -20,13 +20,14 @@ import (
 	subManager "IEdgeInsights/ImageStore/subManager"
 	util "IEdgeInsights/Util"
 	cpuidutil "IEdgeInsights/Util/cpuid"
+	configmgr "IEdgeInsights/libs/ConfigManager"
 	"flag"
 	"io"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
-	"strconv"
 
 	"github.com/golang/glog"
 	minio "github.com/minio/minio-go"
@@ -45,10 +46,30 @@ type IsServer struct {
 func main() {
 
 	flag.Parse()
+	devMode, _ := strconv.ParseBool(os.Getenv("DEV_MODE"))
+	// Initializing Etcd to set env variables
+	cfgMgrConfig := map[string]string{
+		"certFile":  "",
+		"keyFile":   "",
+		"trustFile": "",
+	}
+	if devMode != true {
+		cfgMgrConfig = map[string]string{
+			"certFile":  "/run/secrets/etcd_ImageStore_cert",
+			"keyFile":   "/run/secrets/etcd_ImageStore_key",
+			"trustFile": "/run/secrets/ca_etcd",
+		}
+	}
+	_ = configmgr.Init("etcd", cfgMgrConfig)
+
+	flag.Lookup("alsologtostderr").Value.Set("true")
+	flag.Set("stderrthreshold", os.Getenv("GO_LOG_LEVEL"))
+	flag.Set("v", os.Getenv("GO_VERBOSE"))
+
 	glog.Infof("=============== STARTING imagestore ===============")
 
-	vendor_name := cpuidutil.Cpuid()
-	if vendor_name != "GenuineIntel" {
+	vendorName := cpuidutil.Cpuid()
+	if vendorName != "GenuineIntel" {
 		glog.Errorf("*****Software runs only on Intel's hardware*****")
 		os.Exit(-1)
 	}
@@ -136,7 +157,7 @@ func startReqReply(minioConfigMap map[string]string, serviceConfig map[string]in
 		os.Exit(-1)
 	}
 	defer client.Close()
-	
+
 	serviceName := os.Getenv("AppName")
 	glog.Infof("-- Initializing service %s\n", serviceName)
 	service, err := client.NewService(serviceName)
@@ -262,7 +283,7 @@ func (s *IsServer) Read(key string) ([]byte, error) {
 		return nil, err
 	}
 
-	buf_len := 0
+	bufLen := 0
 	buf := make([]byte, chunkSize, maxFrameSize)
 	outputByteArr := make([]byte, chunkSize)
 	for {
@@ -273,25 +294,25 @@ func (s *IsServer) Read(key string) ([]byte, error) {
 		if err != nil {
 			if err == io.EOF {
 				// This is to send the last remaining chunk
-				copy(buf[buf_len:n], outputByteArr[:n])
-				buf_len += n
+				copy(buf[bufLen:n], outputByteArr[:n])
+				bufLen += n
 				break
 			}
 			glog.Errorf("Error for ioReader.Read(): %v for key: %v \n", err, key)
 			break
 		}
 		break
-		copy(buf[buf_len:n], outputByteArr[0:n])
-		buf_len += n
+		copy(buf[bufLen:n], outputByteArr[0:n])
+		bufLen += n
 	}
 
 	output.Close()
 	output = nil
 
 	var outputBuff []byte
-	if buf_len > 0 {
-		outputBuff = make([]byte, buf_len)
-		copy(outputBuff, buf[0:buf_len])
+	if bufLen > 0 {
+		outputBuff = make([]byte, bufLen)
+		copy(outputBuff, buf[0:bufLen])
 	}
 
 	return outputBuff, nil
@@ -308,7 +329,7 @@ func StartMinio(minioConfigMap map[string]string) {
 	os.Setenv("MINIO_REGION", "gateway")
 	glog.Infof("Minio port: %v\n", common.MinioPort)
 
-	// TODO: Need to see a way to pass port while bring 
+	// TODO: Need to see a way to pass port while bring
 	// as --address switch didn't work as expected
 	cmd := exec.Command("./minio", "server", "--address", common.MinioHost+":"+common.MinioPort, "/data")
 	err := cmd.Run()

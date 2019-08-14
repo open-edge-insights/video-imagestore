@@ -89,6 +89,5 @@ ADD subManager ./ImageStore/subManager
 RUN go build -o /EIS/go/src/IEdgeInsights/ImageStore/main ImageStore/main.go
 
 ENTRYPOINT ["./ImageStore/main"]
-CMD ["-stderrthreshold", ${GO_LOG_LEVEL}, "-v", ${GO_VERBOSE}]
 
 HEALTHCHECK NONE
