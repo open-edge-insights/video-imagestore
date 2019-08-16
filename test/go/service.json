@@ -1,8 +1,0 @@
-{
-    "type": "zmq_tcp",
-    "ImageStore": {
-        "host": "127.0.0.1",
-        "port": 5669
-    }
-}
-

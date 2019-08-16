@@ -37,6 +37,29 @@ const MinioHost string = "127.0.0.1"
 
 var DevMode bool
 
+const CertFilePath string = "/run/secrets/etcd_ImageStore_cert"
+const KeyFilePath string = "/run/secrets/etcd_ImageStore_key"
+const CaFilePath string = "/run/secrets/ca_etcd"
+
 type Writer interface {
 	Store(value []byte, keyname string) (string, error)
+}
+
+func GetConfigInfoMap() map[string]string {
+
+	if !DevMode {
+		config := map[string]string{
+			"certFile":  CertFilePath,
+			"keyFile":   KeyFilePath,
+			"trustFile": CaFilePath,
+		}
+		return config
+	}
+
+	config := map[string]string{
+		"certFile":  "",
+		"keyFile":   "",
+		"trustFile": "",
+	}
+	return config
 }

@@ -24,82 +24,84 @@ package main
 
 import (
 	eismsgbus "EISMessageBus/eismsgbus"
-	"flag"
-	"fmt"
-	"time"
+	common "IEdgeInsights/ImageStore/common"
+	util "IEdgeInsights/libs/common/go"
 	"bytes"
+	"fmt"
+	"os"
+	"strconv"
+	"time"
+
+	"github.com/golang/glog"
 )
 
 func main() {
 	/*
-	Test Description: Test steps are  
-	1.This test program construct the raw frame in memory and publishes to 
-	the topic to which ImageStore is subscribed for.
+		Test Description: Test steps are
+		1.This test program construct the raw frame in memory and publishes to
+		the topic to which ImageStore is subscribed for.
 
-	2.In the next step, test program sends the read command with the known 
-	image handle.
+		2.In the next step, test program sends the read command with the known
+		image handle.
 
-	3.It then compares the frame stored and frame read and prints the result
+		3.It then compares the frame stored and frame read and prints the result
 	*/
 
-	pubConfigFile := flag.String("pubConfigFile", "", "JSON configuration file")
-	pubTopic := flag.String("pubTopic", "", "Publish topic")
-
-	configFile := flag.String("servConfigFile", "", "JSON configuration file")
-	serviceName := flag.String("serviceName", "", "Subscription topic")
-	flag.Parse()
-
-	if publishFrame(pubConfigFile,pubTopic) {
+	if publishFrame() {
 		fmt.Println("\nFrame published successfully\n")
-		readAndCompareFrame(configFile,serviceName)
-	}else{
+		readAndCompareFrame()
+	} else {
 		fmt.Println("Publishing frame failed.Test failed.")
 	}
 }
 
-func publishFrame(configFile *string, topic *string) (bool){
+func publishFrame() bool {
 
 	retVal := false
 
-	if *configFile == "" {
-		fmt.Println("-- Config file must be specified")
-		return retVal
-	}
-
-	fmt.Printf("-- Loading service configuration file %s\n", *configFile)
-	config, err := eismsgbus.ReadJsonConfig(*configFile)
+	devModeStr := os.Getenv("DEV_MODE")
+	devMode, err := strconv.ParseBool(devModeStr)
 	if err != nil {
-		fmt.Printf("-- Failed to parse config: %v\n", err)
-		return retVal
+		glog.Errorf("string to bool conversion error")
 	}
 
-	fmt.Println("-- Initializing message bus context")
+	cfgMgrConfig := common.GetConfigInfoMap()
+	os.Setenv("camera1_stream_results_cfg", "zmq_tcp,127.0.0.1:65013")
+
+	if !devMode {
+		os.Setenv("AppName", "VideoAnalytics")
+		os.Setenv("Clients", "ImageStore")
+	}
+	topic := "camera1_stream_results"
+	config := util.GetMessageBusConfig(topic, "pub", devMode, cfgMgrConfig)
+
+	fmt.Println("-- Initializing message bus context %v\n", config)
 	client, err := eismsgbus.NewMsgbusClient(config)
 	if err != nil {
 		fmt.Printf("-- Error initializing message bus context: %v\n", err)
 		return retVal
 	}
 	defer client.Close()
-	
-	fmt.Printf("-- Creating publisher for topic %s\n", *topic)
-	publisher, err := client.NewPublisher(*topic)
+
+	fmt.Printf("-- Creating publisher for topic %s\n", topic)
+	publisher, err := client.NewPublisher(topic)
 	if err != nil {
 		fmt.Printf("-- Error creating publisher: %v\n", err)
 		return retVal
 	}
 	defer publisher.Close()
-	
+
 	fmt.Println("-- Running...\n")
-	sz := 1024*1024*4
+	sz := 1024 * 1024 * 4
 	frame := make([]byte, sz)
 	frame[0] = 0
 	frame[1] = '|'
 	frame[sz-2] = '|'
 	frame[sz-1] = 0
-	msg := make([]interface{},2)
+	msg := make([]interface{}, 2)
 	msg[0] = map[string]interface{}{"img_handle": "pubTest1"}
 	msg[1] = frame
-	
+
 	err = publisher.Publish(msg)
 	if err != nil {
 		fmt.Printf("-- Failed to publish message: %v\n", err)
@@ -109,28 +111,28 @@ func publishFrame(configFile *string, topic *string) (bool){
 	return true
 }
 
-func readAndCompareFrame(configFile *string, serviceName *string){
+func readAndCompareFrame() {
 
 	fmt.Printf("\n -- Going to read frame -- \n")
 
-	if *configFile == "" {
-		fmt.Println("-- Config file must be specified")
-		return
-	}
-
-	if *serviceName == "" {
-		fmt.Println("-- Service name must be specified")
-		return
-	}
-
-	fmt.Printf("-- Loading configuration file %s\n", *configFile)
-	config, err := eismsgbus.ReadJsonConfig(*configFile)
+	devModeStr := os.Getenv("DEV_MODE")
+	devMode, err := strconv.ParseBool(devModeStr)
 	if err != nil {
-		fmt.Printf("-- Failed to parse config: %v\n", err)
-		return
+		glog.Errorf("string to bool conversion error")
 	}
 
-	fmt.Println("-- Initializing message bus context")
+	cfgMgrConfig := map[string]string{
+		"certFile":  "",
+		"keyFile":   "",
+		"trustFile": "",
+	}
+	if !devMode {
+		os.Setenv("AppName", "ImageStore")
+	}
+	serviceName := "ImageStore"
+	config := util.GetMessageBusConfig(serviceName, "client", devMode, cfgMgrConfig)
+
+	fmt.Println("-- Initializing message bus context %v\n", config)
 	client, err := eismsgbus.NewMsgbusClient(config)
 	if err != nil {
 		fmt.Printf("-- Error initializing message bus context: %v\n", err)
@@ -138,8 +140,8 @@ func readAndCompareFrame(configFile *string, serviceName *string){
 	}
 	defer client.Close()
 
-	fmt.Printf("-- Initializing service requester %s\n", *serviceName)
-	service, err := client.GetService(*serviceName)
+	fmt.Printf("-- Initializing service requester %s\n", serviceName)
+	service, err := client.GetService(serviceName)
 	if err != nil {
 		fmt.Printf("-- Error initializing service requester: %v\n", err)
 		return
@@ -147,15 +149,15 @@ func readAndCompareFrame(configFile *string, serviceName *string){
 	defer service.Close()
 
 	// construct frame data
-	sz := 1024*1024*4
+	sz := 1024 * 1024 * 4
 	frame := make([]byte, sz)
 	frame[0] = 0
 	frame[1] = '|'
 	frame[sz-2] = '|'
 	frame[sz-1] = 0
 
-    // Send Read command & get the frame data
-	response := map[string]interface{}{"command": "read","img_handle":"pubTest1"}
+	// Send Read command & get the frame data
+	response := map[string]interface{}{"command": "read", "img_handle": "pubTest1"}
 	err1 := service.Request(response)
 	if err1 != nil {
 		fmt.Printf("-- Error sending request: %v\n", err1)
@@ -164,20 +166,20 @@ func readAndCompareFrame(configFile *string, serviceName *string){
 	}
 
 	fmt.Printf("-- Waiting for read command response")
-	
+
 	resp, err := service.ReceiveResponse(-1)
 	if err != nil {
 		fmt.Printf("-- Error receiving response: %v\n", err)
 		fmt.Printf("--Test Failed--\n")
 		return
 	}
-	
+
 	fmt.Printf("\nFrame read and frame size is : %d \n", len(resp.Blob))
-	
+
 	// Compare frame data and declare result
 	if bytes.Compare(frame, resp.Blob) == 0 {
 		fmt.Printf("\nBinary data stored and read matches. Test passed\n")
-	}else{
+	} else {
 		fmt.Printf("\nBinary data stored and read does not matches. Test failed\n")
 	}
 }

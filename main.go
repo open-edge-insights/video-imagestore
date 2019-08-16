@@ -15,8 +15,8 @@ package main
 import (
 	eismsgbus "EISMessageBus/eismsgbus"
 	common "IEdgeInsights/ImageStore/common"
-	configManager "IEdgeInsights/ImageStore/configManager"
 	imagestore "IEdgeInsights/ImageStore/go/ImageStore"
+	isConfigMgr "IEdgeInsights/ImageStore/isConfigMgr"
 	subManager "IEdgeInsights/ImageStore/subManager"
 	util "IEdgeInsights/Util"
 	cpuidutil "IEdgeInsights/Util/cpuid"
@@ -75,7 +75,7 @@ func main() {
 	}
 
 	common.DevMode, _ = strconv.ParseBool(os.Getenv("DEV_MODE"))
-	minIoConfig, err := configManager.ReadMinIoConfig()
+	minIoConfig, err := isConfigMgr.ReadMinIoConfig()
 	if err != nil {
 		glog.Errorf("Error while reading config :" + err.Error())
 		os.Exit(-1)
@@ -95,7 +95,7 @@ func main() {
 
 	done := make(chan bool)
 
-	serviceConfig, err := configManager.ReadServiceConfig()
+	serviceConfig, err := isConfigMgr.ReadServiceConfig()
 	if err != nil {
 		glog.Errorf("Error in processing the serviceConfig")
 		os.Exit(-1)
@@ -121,7 +121,7 @@ func startSubScriber(minioConfigMap map[string]string) {
 		os.Exit(-1)
 	}
 
-	subConfig, err := configManager.ReadSubConfig(topicArray)
+	subConfig, err := isConfigMgr.ReadSubConfig(topicArray)
 	if err != nil {
 		glog.Errorf("Error in processing the config")
 		os.Exit(-1)

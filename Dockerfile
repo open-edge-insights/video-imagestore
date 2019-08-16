@@ -77,14 +77,7 @@ ENV CGO_CFLAGS -I$MSGBUS_DIR/include/
 ENV CGO_LDFLAGS "$CGO_LDFLAGS -L$MSGBUS_DIR/build -leismsgbus"
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/usr/local/lib
 
-
-ADD main.go ./ImageStore/main.go
-ADD common ./ImageStore/common
-ADD configManager ./ImageStore/configManager
-ADD go ./ImageStore/go
-ADD subManager ./ImageStore/subManager
-
-
+COPY . ./ImageStore/
 
 RUN go build -o /EIS/go/src/IEdgeInsights/ImageStore/main ImageStore/main.go
 

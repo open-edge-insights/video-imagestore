@@ -20,17 +20,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-package configManager
+package isConfigMgr
 
 import (
 	configmgr "IEdgeInsights/libs/ConfigManager"
 	"encoding/json"
+
 	//"fmt"
 	//"strconv"
-	"os"
-	util "IEdgeInsights/libs/common/go"
-	"github.com/golang/glog"
 	common "IEdgeInsights/ImageStore/common"
+	util "IEdgeInsights/libs/common/go"
+	"os"
+
+	"github.com/golang/glog"
 )
 
 type Configuration struct {
@@ -60,12 +62,7 @@ func ReadMinIoConfig() (Minio, error) {
 	var minIoConfig Minio
 	var tempConfig Configuration
 
-	config := map[string]string{
-		"certFile":  "",
-		"keyFile":   "",
-		"trustFile": "",
-	}
-
+	config := common.GetConfigInfoMap()
 	confHandler := configmgr.Init("etcd", config)
 	appName := os.Getenv("AppName")
 	minioConfigPath := "/" + appName + "/config"
@@ -91,12 +88,8 @@ func ReadMinIoConfig() (Minio, error) {
 func ReadSubConfig(topicArray []string) (map[string]interface{}, error) {
 
 	subsInfoMap := make(map[string]interface{})
-	cfgMgrConfig := map[string]string{
-		"certFile":  "",
-		"keyFile":   "",
-		"trustFile": "",
-	}
-	
+	cfgMgrConfig := common.GetConfigInfoMap()
+	glog.Info("config for etcd client : %v", cfgMgrConfig)
 	for _, topic := range topicArray {
 		subsInfoMap[topic] = util.GetMessageBusConfig(topic, "sub", common.DevMode, cfgMgrConfig)
 	}
@@ -106,11 +99,8 @@ func ReadSubConfig(topicArray []string) (map[string]interface{}, error) {
 
 func ReadServiceConfig() (map[string]interface{}, error) {
 	serviceName := os.Getenv("AppName")
-	
-	cfgMgrConfig := map[string]string{
-		"certFile":  "",
-		"keyFile":   "",
-		"trustFile": "",
-	}
-	return util.GetMessageBusConfig(serviceName, "server", common.DevMode, cfgMgrConfig),nil
+
+	cfgMgrConfig := common.GetConfigInfoMap()
+	glog.Info("config for etcd client : %v", cfgMgrConfig)
+	return util.GetMessageBusConfig(serviceName, "server", common.DevMode, cfgMgrConfig), nil
 }
