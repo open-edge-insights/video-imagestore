@@ -1,6 +1,6 @@
 # ImageStore dockerfile
 ARG EIS_VERSION
-FROM ia_gobase:$EIS_VERSION
+FROM ia_gobase:$EIS_VERSION as gobase
 
 RUN mkdir -p ${GO_WORK_DIR}/log && \
     apt-get update
@@ -63,8 +63,14 @@ RUN mkdir -p ${GO_X_SYS} && \
     cd ${GO_X_SYS} && \
     git checkout -b known_version d0be0721c37eeb5299f245a996a483160fc36940
 
+FROM ia_common:$EIS_VERSION as common
 
-RUN cd /EIS/go/src/IEdgeInsights/libs/EISMessageBus && \
+FROM gobase
+
+COPY --from=common /libs ${GO_WORK_DIR}/libs
+COPY --from=common /Util ${GO_WORK_DIR}/Util
+
+RUN cd ${GO_WORK_DIR}/libs/EISMessageBus && \
     rm -rf build deps && mkdir -p build && cd build && \
     cmake -DWITH_GO=ON .. && \
     make && \
@@ -77,9 +83,18 @@ ENV CGO_CFLAGS -I$MSGBUS_DIR/include/
 ENV CGO_LDFLAGS "$CGO_LDFLAGS -L$MSGBUS_DIR/build -leismsgbus"
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/usr/local/lib
 
+RUN ln -s ${GO_WORK_DIR}/libs/EISMessageBus/go/EISMessageBus/ $GOPATH/src/EISMessageBus
+
+# Copying safestringlib to Util
+RUN cd safestringlib && \
+    cp -rf libsafestring.a ${GO_WORK_DIR}/Util/cpuid
+
+RUN cd Util/cpuid && \
+    make -j8
+
 COPY . ./ImageStore/
 
-RUN go build -o /EIS/go/src/IEdgeInsights/ImageStore/main ImageStore/main.go
+RUN go build -o ${GO_WORK_DIR}/ImageStore/main ImageStore/main.go
 
 ENTRYPOINT ["./ImageStore/main"]
 
