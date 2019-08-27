@@ -2,8 +2,7 @@
 ARG EIS_VERSION
 FROM ia_gobase:$EIS_VERSION as gobase
 
-RUN mkdir -p ${GO_WORK_DIR}/log && \
-    apt-get update
+RUN apt-get update
 
 # Installing all golang dependencies
 # TODO: Use dep tool itself in future once the "source" value
