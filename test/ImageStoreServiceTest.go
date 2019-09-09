@@ -25,7 +25,7 @@ package main
 import (
 	eismsgbus "EISMessageBus/eismsgbus"
 	common "IEdgeInsights/ImageStore/common"
-	util "IEdgeInsights/libs/common/go"
+	msgbusutil "IEdgeInsights/util/msgbusutil"
 	"bytes"
 	"fmt"
 	"os"
@@ -53,7 +53,7 @@ func main() {
 	}
 
 	cfgMgrConfig := common.GetConfigInfoMap()
-	config := util.GetMessageBusConfig("ImageStore", "client", devMode, cfgMgrConfig)
+	config := msgbusutil.GetMessageBusConfig("ImageStore", "client", devMode, cfgMgrConfig)
 
 	fmt.Println("-- Initializing message bus context %v\n", config)
 	client, err := eismsgbus.NewMsgbusClient(config)

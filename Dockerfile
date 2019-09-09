@@ -39,9 +39,8 @@ RUN mv minio.${MINIO_VERSION} minio
 RUN chmod +x minio
 
 ARG EIS_UID
-# Adding cert dirs
-RUN mkdir -p /etc/ssl/imagestore && \
-    mkdir /.minio && \
+
+RUN mkdir /.minio && \
     chown -R ${EIS_UID} /.minio
 
 ENV GO_X_NET ${GOPATH}/src/golang.org/x/net
@@ -67,7 +66,7 @@ FROM ia_common:$EIS_VERSION as common
 FROM gobase
 
 COPY --from=common /libs ${GO_WORK_DIR}/libs
-COPY --from=common /Util ${GO_WORK_DIR}/Util
+COPY --from=common /util ${GO_WORK_DIR}/util
 
 RUN cd ${GO_WORK_DIR}/libs/EISMessageBus && \
     rm -rf build deps && mkdir -p build && cd build && \
@@ -86,9 +85,9 @@ RUN ln -s ${GO_WORK_DIR}/libs/EISMessageBus/go/EISMessageBus/ $GOPATH/src/EISMes
 
 # Copying safestringlib to Util
 RUN cd safestringlib && \
-    cp -rf libsafestring.a ${GO_WORK_DIR}/Util/cpuid
+    cp -rf libsafestring.a ${GO_WORK_DIR}/util/cpuid
 
-RUN cd Util/cpuid && \
+RUN cd util/cpuid && \
     make -j$(nproc)
 
 COPY . ./ImageStore/
@@ -96,5 +95,3 @@ COPY . ./ImageStore/
 RUN go build -o ${GO_WORK_DIR}/ImageStore/main ImageStore/main.go
 
 ENTRYPOINT ["./ImageStore/main"]
-
-HEALTHCHECK NONE

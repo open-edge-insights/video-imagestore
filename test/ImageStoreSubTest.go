@@ -25,7 +25,7 @@ package main
 import (
 	eismsgbus "EISMessageBus/eismsgbus"
 	common "IEdgeInsights/ImageStore/common"
-	util "IEdgeInsights/libs/common/go"
+	msgbusutil "IEdgeInsights/util/msgbusutil"
 	"bytes"
 	"fmt"
 	"os"
@@ -73,7 +73,7 @@ func publishFrame() bool {
 		os.Setenv("Clients", "ImageStore")
 	}
 	topic := "camera1_stream_results"
-	config := util.GetMessageBusConfig(topic, "pub", devMode, cfgMgrConfig)
+	config := msgbusutil.GetMessageBusConfig(topic, "pub", devMode, cfgMgrConfig)
 
 	fmt.Println("-- Initializing message bus context %v\n", config)
 	client, err := eismsgbus.NewMsgbusClient(config)
@@ -130,7 +130,7 @@ func readAndCompareFrame() {
 		os.Setenv("AppName", "ImageStore")
 	}
 	serviceName := "ImageStore"
-	config := util.GetMessageBusConfig(serviceName, "client", devMode, cfgMgrConfig)
+	config := msgbusutil.GetMessageBusConfig(serviceName, "client", devMode, cfgMgrConfig)
 
 	fmt.Println("-- Initializing message bus context %v\n", config)
 	client, err := eismsgbus.NewMsgbusClient(config)

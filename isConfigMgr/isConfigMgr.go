@@ -29,7 +29,7 @@ import (
 	//"fmt"
 	//"strconv"
 	common "IEdgeInsights/ImageStore/common"
-	util "IEdgeInsights/libs/common/go"
+	msgbusutil "IEdgeInsights/util/msgbusutil"
 	"os"
 
 	"github.com/golang/glog"
@@ -91,7 +91,7 @@ func ReadSubConfig(topicArray []string) (map[string]interface{}, error) {
 	cfgMgrConfig := common.GetConfigInfoMap()
 	glog.Info("config for etcd client : %v", cfgMgrConfig)
 	for _, topic := range topicArray {
-		subsInfoMap[topic] = util.GetMessageBusConfig(topic, "sub", common.DevMode, cfgMgrConfig)
+		subsInfoMap[topic] = msgbusutil.GetMessageBusConfig(topic, "sub", common.DevMode, cfgMgrConfig)
 	}
 
 	return subsInfoMap, nil
@@ -102,5 +102,5 @@ func ReadServiceConfig() (map[string]interface{}, error) {
 
 	cfgMgrConfig := common.GetConfigInfoMap()
 	glog.Info("config for etcd client : %v", cfgMgrConfig)
-	return util.GetMessageBusConfig(serviceName, "server", common.DevMode, cfgMgrConfig), nil
+	return msgbusutil.GetMessageBusConfig(serviceName, "server", common.DevMode, cfgMgrConfig), nil
 }
