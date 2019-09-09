@@ -276,46 +276,51 @@ func (s *IsServer) StoreData(blob []byte, keyname string) (string, error) {
 //    Returns the byte array of image buffer.
 // 2. error
 //    Returns an error object if read fails.
+
+//Function to appned read and return byte data 
+func AppendByte(slice []byte, data ...byte) []byte {
+    m := len(slice)
+    n := m + len(data)
+    if n > cap(slice) { // if necessary, reallocate
+        // allocate double what's needed, for future growth.
+        newSlice := make([]byte, (n+1)*2)
+        copy(newSlice, slice)
+        slice = newSlice
+    }
+    slice = slice[0:n]
+    copy(slice[m:n], data)
+    return slice
+}
+
 func (s *IsServer) Read(key string) ([]byte, error) {
 	output, err := s.is.Read(key)
 	if err != nil {
 		glog.Errorf("Read failed: %v", err)
 		return nil, err
 	}
-
-	bufLen := 0
-	buf := make([]byte, chunkSize, maxFrameSize)
+	buf := make([]byte, 0)
 	outputByteArr := make([]byte, chunkSize)
 	for {
-		// TODO : if len(output handle data) > outputByteArr,
-		// Read API crashes. This need to be fixed.
-		// Currently the 8MB is max size of image
 		n, err := (output).Read(outputByteArr)
-		if err != nil {
+		if err != nil {	
 			if err == io.EOF {
 				// This is to send the last remaining chunk
-				copy(buf[bufLen:n], outputByteArr[:n])
-				bufLen += n
+				if n > 0 {
+					buf = AppendByte(buf, outputByteArr[0:n]...)	
+				}
 				break
 			}
-			glog.Errorf("Error for ioReader.Read(): %v for key: %v \n", err, key)
+			glog.Info("Error for ioReader.Read(): %v for key: %v \n", err, key)
 			break
 		}
-		break
-		copy(buf[bufLen:n], outputByteArr[0:n])
-		bufLen += n
+		if n > 0 {
+			buf = AppendByte(buf, outputByteArr[0:n]...)
+			n = -1
+		}
 	}
-
 	output.Close()
 	output = nil
-
-	var outputBuff []byte
-	if bufLen > 0 {
-		outputBuff = make([]byte, bufLen)
-		copy(outputBuff, buf[0:bufLen])
-	}
-
-	return outputBuff, nil
+	return buf, nil
 }
 
 // StartMinio starts the minio server.

@@ -51,7 +51,7 @@ func main() {
 	if err != nil {
 		glog.Errorf("string to bool conversion error")
 	}
-
+	common.DevMode, _ = strconv.ParseBool(os.Getenv("DEV_MODE"))
 	cfgMgrConfig := common.GetConfigInfoMap()
 	config := msgbusutil.GetMessageBusConfig("ImageStore", "client", devMode, cfgMgrConfig)
 
@@ -72,7 +72,7 @@ func main() {
 	defer service.Close()
 
 	// construct frame data
-	sz := 1024 * 1024 * 4
+	sz := 1024 * 1024 * 16
 	frame := make([]byte, sz)
 	frame[0] = 0
 	frame[1] = '|'
@@ -110,7 +110,7 @@ func main() {
 		return
 	}
 
-	fmt.Printf("-- Waiting for read command response")
+	fmt.Printf("-- Waiting for read command response\n")
 
 	resp, err = service.ReceiveResponse(-1)
 	if err != nil {
@@ -118,7 +118,6 @@ func main() {
 		fmt.Printf("--Test Failed--\n")
 		return
 	}
-
 	fmt.Printf("frame size after read : %d \n", len(resp.Blob))
 
 	// Compare frame data and declare result

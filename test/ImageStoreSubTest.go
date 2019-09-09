@@ -61,6 +61,7 @@ func publishFrame() bool {
 
 	devModeStr := os.Getenv("DEV_MODE")
 	devMode, err := strconv.ParseBool(devModeStr)
+	common.DevMode, _ = strconv.ParseBool(os.Getenv("DEV_MODE"))
 	if err != nil {
 		glog.Errorf("string to bool conversion error")
 	}
@@ -173,7 +174,7 @@ func readAndCompareFrame() {
 		fmt.Printf("--Test Failed--\n")
 		return
 	}
-
+	fmt.Printf("\nFrame size is : %d \n", len(frame))
 	fmt.Printf("\nFrame read and frame size is : %d \n", len(resp.Blob))
 
 	// Compare frame data and declare result
