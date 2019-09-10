@@ -1,7 +1,8 @@
 # ImageStore dockerfile
 ARG EIS_VERSION
-FROM ia_gobase:$EIS_VERSION as gobase
+FROM ia_eisbase:$EIS_VERSION as eisbase
 
+WORKDIR ${GO_WORK_DIR}
 RUN apt-get update
 
 # Installing all golang dependencies
@@ -63,7 +64,7 @@ RUN mkdir -p ${GO_X_SYS} && \
 
 FROM ia_common:$EIS_VERSION as common
 
-FROM gobase
+FROM eisbase
 
 COPY --from=common /libs ${GO_WORK_DIR}/libs
 COPY --from=common /util ${GO_WORK_DIR}/util
