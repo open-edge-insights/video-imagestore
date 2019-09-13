@@ -36,6 +36,7 @@ If `AppName` is `ImageStore`, then the app's config would look like as below
         }
     }
  ```
+For more details on Etcd and MessageBus endpoint configuration, visit [Etcd_and_MsgBus_Endpoint_Configuration](../Etcd_and_MsgBus_Endpoint_Configuration].md).
 
 ## `Installation`
 
@@ -48,6 +49,5 @@ If `AppName` is `ImageStore`, then the app's config would look like as below
     1. Build and Run VideoAnalytics as container
         ```
         $ cd [repo]/docker_setup
-        $ ln -sf ImageStore/.dockerignore ../.dockerignore
         $ docker-compose up --build ImageStore
         ```
