@@ -1,22 +1,28 @@
 # `ImageStore Module`
 
-1. ImageStore will subscribe to the Video Analytics result. So ImageStore
-   receives the frame data and stores it in minio.
-   The payload format expected by image store is as follows
-   map ("img_handle":"$handle_name"),[]byte($binaryImage)
+The Image Store component of EIS comes as a separate container which primarily
+subscribes to the stream that comes out of the VideoAnalytics app via EIS
+MessageBus and stores the frame into minio for historical analysis.
 
-2. ImageStore starts the server which provides the read and store interfaces.
-   The payload format is as follows
+The high level logical flow of ImageStore is as below:
+1. The messagebus subscriber in ImageStore will subscribe to the VideoAnalytics
+   published classified result (metadata, frame) on the messagebus.
+   The img_handle is extracted out of the metadata and is used as the key and
+   the frame is stored as a value for that key in minio persistent storage.
+2. For historical analysis of the stored classified images, ImageStore starts
+   the messagebus server which provides the read and store interfaces.
+   The payload format is as follows for:
+   * Store interface:
+     ```
+        Request: map ("command": "store","img_handle":"$handle_name"),[]byte($binaryImage)
+        Response : map ("img_handle":"$handle_name", "error":"$error_msg") ("error" is optional and available only in case of error in execution.)
+     ```
+   * Read interface:
+     ```
+        Request : map ("command": "read", "img_handle":"$handle_name")
+        Response : map ("img_handle":"$handle_name", "error":"$error_msg"),[]byte($binaryImage) ("error" is optional and available only in case of error in execution. And $binaryImage is available only in case of successful read)
+     ```
 
-   Request : map ("command": "store" , "img_handle":"$handle_name"),[]byte($binaryImage)
-   Response : map ("img_handle":"$handle_name", "error":"$error_msg")
-   ("error" is optional and available only in case of error in execution.)
-
-   Request : map ("command": "read" , "img_handle":"$handle_name")
-   Response : map ("img_handle":"$handle_name", "error":"$error_msg"),[]byte($binaryImage) 
-   ("error" is optional and available only in case of error in execution.
-   And $binaryImage is available only in case of successfull read)
-   
 ## `Configuration`
 
 All the ImageStore module configuration are added into etcd (distributed
@@ -27,7 +33,7 @@ If `AppName` is `ImageStore`, then the app's config would look like as below
  for `/ImageStore/config` key in Etcd:
  ```
     "/ImageStore/config": {
-        "minio":{  
+        "minio":{
            "accessKey":"admin",
            "secretKey":"password",
            "retentionTime":"1h",
@@ -36,6 +42,16 @@ If `AppName` is `ImageStore`, then the app's config would look like as below
         }
     }
  ```
+
+### `Detailed description on each of the keys used`
+|  Key	        | Description 	                                                                                           | Possible Values  	                      |Required/Optional |
+|---	        |---	                                                                                                   |---	                                      |---	             |
+|  accessKey 	|   Username required to access Minio DB	                                                               | Any suitable value                       | Required	     |
+|  secretKey 	|   Password required to access Minio DB	                                                               | Any suitable value             	      | Required         |
+|  retentionTime|   The retention parameter specifies the retention policy to apply for the images stored in Minio DB. | Suitable duration string value as mentioned at https://golang.org/pkg/time/#ParseDuration |   Required        |
+|  retentionPollInterval | Used to set the time interval for checking images for expiration. Expired images will become candidates for deletion and no longer retained |	Suitable duration string value as mentioned at https://golang.org/pkg/time/#ParseDuration  |   Required        |
+|  ssl          |  If "true", establishes a secure connection with Minio DB else a non-secure connection                   | "true" or "false"                        |   Required        |
+
 For more details on Etcd and MessageBus endpoint configuration, visit [Etcd_and_MsgBus_Endpoint_Configuration](../Etcd_and_MsgBus_Endpoint_Configuration.md).
 
 ## `Installation`
