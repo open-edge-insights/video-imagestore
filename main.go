@@ -46,20 +46,10 @@ type IsServer struct {
 func main() {
 
 	flag.Parse()
-	devMode, _ := strconv.ParseBool(os.Getenv("DEV_MODE"))
+
 	// Initializing Etcd to set env variables
-	cfgMgrConfig := map[string]string{
-		"certFile":  "",
-		"keyFile":   "",
-		"trustFile": "",
-	}
-	if devMode != true {
-		cfgMgrConfig = map[string]string{
-			"certFile":  "/run/secrets/etcd_ImageStore_cert",
-			"keyFile":   "/run/secrets/etcd_ImageStore_key",
-			"trustFile": "/run/secrets/ca_etcd",
-		}
-	}
+	appName := os.Getenv("AppName")
+	cfgMgrConfig := util.GetCryptoMap(appName)
 	_ = configmgr.Init("etcd", cfgMgrConfig)
 
 	flag.Lookup("alsologtostderr").Value.Set("true")
@@ -277,19 +267,19 @@ func (s *IsServer) StoreData(blob []byte, keyname string) (string, error) {
 // 2. error
 //    Returns an error object if read fails.
 
-//Function to appned read and return byte data 
+//Function to appned read and return byte data
 func AppendByte(slice []byte, data ...byte) []byte {
-    m := len(slice)
-    n := m + len(data)
-    if n > cap(slice) { // if necessary, reallocate
-        // allocate double what's needed, for future growth.
-        newSlice := make([]byte, (n+1)*2)
-        copy(newSlice, slice)
-        slice = newSlice
-    }
-    slice = slice[0:n]
-    copy(slice[m:n], data)
-    return slice
+	m := len(slice)
+	n := m + len(data)
+	if n > cap(slice) { // if necessary, reallocate
+		// allocate double what's needed, for future growth.
+		newSlice := make([]byte, (n+1)*2)
+		copy(newSlice, slice)
+		slice = newSlice
+	}
+	slice = slice[0:n]
+	copy(slice[m:n], data)
+	return slice
 }
 
 func (s *IsServer) Read(key string) ([]byte, error) {
@@ -302,11 +292,11 @@ func (s *IsServer) Read(key string) ([]byte, error) {
 	outputByteArr := make([]byte, chunkSize)
 	for {
 		n, err := (output).Read(outputByteArr)
-		if err != nil {	
+		if err != nil {
 			if err == io.EOF {
 				// This is to send the last remaining chunk
 				if n > 0 {
-					buf = AppendByte(buf, outputByteArr[0:n]...)	
+					buf = AppendByte(buf, outputByteArr[0:n]...)
 				}
 				break
 			}

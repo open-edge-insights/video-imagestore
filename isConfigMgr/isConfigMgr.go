@@ -24,6 +24,7 @@ package isConfigMgr
 
 import (
 	configmgr "IEdgeInsights/libs/ConfigManager"
+	util "IEdgeInsights/util"
 	"encoding/json"
 
 	//"fmt"
@@ -62,9 +63,10 @@ func ReadMinIoConfig() (Minio, error) {
 	var minIoConfig Minio
 	var tempConfig Configuration
 
-	config := common.GetConfigInfoMap()
-	confHandler := configmgr.Init("etcd", config)
 	appName := os.Getenv("AppName")
+	config := util.GetCryptoMap(appName)
+	confHandler := configmgr.Init("etcd", config)
+
 	minioConfigPath := "/" + appName + "/config"
 	value, err := confHandler.GetConfig(minioConfigPath)
 	if err != nil {
@@ -86,9 +88,10 @@ func ReadMinIoConfig() (Minio, error) {
 }
 
 func ReadSubConfig(topicArray []string) (map[string]interface{}, error) {
+	appName := os.Getenv("AppName")
 
 	subsInfoMap := make(map[string]interface{})
-	cfgMgrConfig := common.GetConfigInfoMap()
+	cfgMgrConfig := util.GetCryptoMap(appName)
 	glog.Info("config for etcd client : %v", cfgMgrConfig)
 	for _, topic := range topicArray {
 		subsInfoMap[topic] = msgbusutil.GetMessageBusConfig(topic, "sub", common.DevMode, cfgMgrConfig)
@@ -98,9 +101,9 @@ func ReadSubConfig(topicArray []string) (map[string]interface{}, error) {
 }
 
 func ReadServiceConfig() (map[string]interface{}, error) {
-	serviceName := os.Getenv("AppName")
+	appName := os.Getenv("AppName")
 
-	cfgMgrConfig := common.GetConfigInfoMap()
+	cfgMgrConfig := util.GetCryptoMap(appName)
 	glog.Info("config for etcd client : %v", cfgMgrConfig)
-	return msgbusutil.GetMessageBusConfig(serviceName, "server", common.DevMode, cfgMgrConfig), nil
+	return msgbusutil.GetMessageBusConfig(appName, "server", common.DevMode, cfgMgrConfig), nil
 }
