@@ -75,7 +75,7 @@ func main() {
 		os.Exit(-1)
 	}
 
-	flag.Lookup("alsologtostderr").Value.Set("true")
+	flag.Set("logtostderr", "true")
 	defer glog.Flush()
 
 

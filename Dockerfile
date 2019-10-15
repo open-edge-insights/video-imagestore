@@ -3,7 +3,6 @@ ARG EIS_VERSION
 FROM ia_eisbase:$EIS_VERSION as eisbase
 
 WORKDIR ${GO_WORK_DIR}
-RUN apt-get update
 
 # Installing all golang dependencies
 # TODO: Use dep tool itself in future once the "source" value
