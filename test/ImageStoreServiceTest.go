@@ -25,7 +25,7 @@ package main
 import (
 	eismsgbus "EISMessageBus/eismsgbus"
 	common "IEdgeInsights/ImageStore/common"
-	msgbusutil "IEdgeInsights/util/msgbusutil"
+	msgbusutil "IEdgeInsights/common/util/msgbusutil"
 	"bytes"
 	"fmt"
 	"os"

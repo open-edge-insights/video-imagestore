@@ -23,14 +23,14 @@ SOFTWARE.
 package isConfigMgr
 
 import (
-	configmgr "IEdgeInsights/libs/ConfigManager"
-	util "IEdgeInsights/util"
+	configmgr "IEdgeInsights/common/libs/ConfigManager"
+	util "IEdgeInsights/common/util"
 	"encoding/json"
 
 	//"fmt"
 	//"strconv"
 	common "IEdgeInsights/ImageStore/common"
-	msgbusutil "IEdgeInsights/util/msgbusutil"
+	msgbusutil "IEdgeInsights/common/util/msgbusutil"
 	"os"
 
 	"github.com/golang/glog"
