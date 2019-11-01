@@ -65,23 +65,15 @@ FROM ia_common:$EIS_VERSION as common
 
 FROM eisbase
 
-COPY --from=common /libs ${GO_WORK_DIR}/common/libs
-COPY --from=common /util ${GO_WORK_DIR}/common/util
+COPY --from=common ${GO_WORK_DIR}/common/libs ${GO_WORK_DIR}/common/libs
+COPY --from=common ${GO_WORK_DIR}/common/util ${GO_WORK_DIR}/common/util
+COPY --from=common ${GO_WORK_DIR}/common/cmake ${GO_WORK_DIR}/common/cmake
+COPY --from=common /usr/local/lib /usr/local/lib
+COPY --from=common /usr/local/include /usr/local/include
+COPY --from=common ${GO_WORK_DIR}/../EISMessageBus ${GO_WORK_DIR}/../EISMessageBus
 
-RUN cd ${GO_WORK_DIR}/common/libs/EISMessageBus && \
-    rm -rf build deps && mkdir -p build && cd build && \
-    cmake -DWITH_GO=ON .. && \
-    make && \
-    make install
-
-ENV MSGBUS_DIR $GO_WORK_DIR/libs/EISMessageBus
-ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:$MSGBUS_DIR/build/
-ENV PKG_CONFIG_PATH $PKG_CONFIG_PATH:$MSGBUS_DIR/build/
-ENV CGO_CFLAGS -I$MSGBUS_DIR/include/
-ENV CGO_LDFLAGS "$CGO_LDFLAGS -L$MSGBUS_DIR/build -leismsgbus"
+ENV CGO_LDFLAGS "$CGO_LDFLAGS -leismsgbus -leismsgenv -leisutils"
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/usr/local/lib
-
-RUN ln -s ${GO_WORK_DIR}/common/libs/EISMessageBus/go/EISMessageBus/ $GOPATH/src/EISMessageBus
 
 # Copying safestringlib to Util
 RUN cd safestringlib && \
