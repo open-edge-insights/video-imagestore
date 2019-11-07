@@ -83,4 +83,14 @@ COPY . ./ImageStore/
 
 RUN go build -o ${GO_WORK_DIR}/ImageStore/main ImageStore/main.go
 
+#Remove the GO development environment
+RUN mkdir -p ${GOPATH}/temp/IEdgeInsights/ImageStore && \
+    mv ${GO_WORK_DIR}/ImageStore/main ${GOPATH}/temp/IEdgeInsights/ImageStore/ && \
+    mv ${GO_WORK_DIR}/minio ${GOPATH}/temp/IEdgeInsights/ && \
+    rm -rf ${GOPATH}/src && \
+    rm -rf ${GOPATH}/bin/dep && \
+    rm -rf ${GOPATH}/pkg && \
+    rm -rf /usr/local/go && \
+    mv ${GOPATH}/temp ${GOPATH}/src
+
 ENTRYPOINT ["./ImageStore/main"]
