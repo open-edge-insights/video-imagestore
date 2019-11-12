@@ -93,4 +93,10 @@ RUN mkdir -p ${GOPATH}/temp/IEdgeInsights/ImageStore && \
     rm -rf /usr/local/go && \
     mv ${GOPATH}/temp ${GOPATH}/src
 
+#Removing build dependencies
+RUN apt-get remove -y wget && \
+    apt-get remove -y git && \
+    apt-get remove curl && \
+    apt-get autoremove -y
+
 ENTRYPOINT ["./ImageStore/main"]
