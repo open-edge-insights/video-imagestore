@@ -77,7 +77,7 @@ RUN cd safestringlib && \
     cp -rf libsafestring.a ${GO_WORK_DIR}/common/util/cpuid
 
 RUN cd common/util/cpuid && \
-    make -j$(nproc)
+    make -j$(nproc --ignore=2)
 
 COPY . ./ImageStore/
 
