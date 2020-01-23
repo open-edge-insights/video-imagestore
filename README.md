@@ -65,6 +65,6 @@ For more details on Etcd and MessageBus endpoint configuration, visit [Etcd_Secr
 
     1. Build and Run VideoAnalytics as container
         ```
-        $ cd [repo]/docker_setup
+        $ cd [repo]/build
         $ docker-compose up --build ImageStore
         ```

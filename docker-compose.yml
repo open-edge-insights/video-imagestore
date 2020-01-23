@@ -1,0 +1,60 @@
+version: '3.6'
+
+services:
+  ## Define Imagestore service which hosts minio dbs
+  ia_imagestore:
+    depends_on:
+      - ia_common
+    build:
+      context: $PWD/../ImageStore
+      dockerfile: $PWD/../ImageStore/Dockerfile
+      args:
+        EIS_VERSION: ${EIS_VERSION}
+        MINIO_VERSION: ${MINIO_VERSION}
+        EIS_UID: ${EIS_UID}
+    image: ${DOCKER_REGISTRY}ia_imagestore:${EIS_VERSION}
+    container_name: ia_imagestore
+    hostname: ia_imagestore
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      AppName: "ImageStore"
+      DEV_MODE: ${DEV_MODE}
+      no_proxy: ${no_proxy}
+
+      # MessageBus Endpoint Configuration
+      # Uncomment the following line if using Discover history tool in PROD mode
+      CertType: "zmq"
+      Server: "zmq_tcp,127.0.0.1:5669"
+      Clients: "Visualizer,RestDataExport"
+      # Server: "zmq_ipc,${SOCKET_DIR}/"
+      # Use IPC mode (zmq_ipc) when VideoIngestion, VideoAnalytics and Visualizer
+      # based containers are running on the same host. If they are running on diff
+      # host, please use TCP mode for communication.
+      # Eg: Stream cfg for
+      # IPC: zmq_ipc, <absolute_socket_directory_path>
+      # TPC: zmq_tcp, <publisher_host>:<publisher_port>
+      SubTopics: "VideoAnalytics/camera1_stream_results"
+      camera1_stream_results_cfg: "zmq_tcp,127.0.0.1:65013"
+    volumes:
+      - "vol_imagestore_data:/data"
+      - "vol_eis_socket:${SOCKET_DIR}"
+    user: ${EIS_UID}
+    secrets:
+      - ca_etcd
+      - etcd_ImageStore_cert
+      - etcd_ImageStore_key
+
+volumes:
+  vol_imagestore_data:
+    driver: local
+    driver_opts:
+      type: local
+      o: bind
+      device: ${EIS_INSTALL_PATH}/data
+
+secrets:
+  etcd_ImageStore_cert:
+    file: provision/Certificates/ImageStore/ImageStore_client_certificate.pem
+  etcd_ImageStore_key:
+    file: provision/Certificates/ImageStore/ImageStore_client_key.pem
