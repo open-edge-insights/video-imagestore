@@ -99,4 +99,6 @@ RUN apt-get remove -y wget && \
     apt-get remove curl && \
     apt-get autoremove -y
 
+COPY schema.json .
+
 ENTRYPOINT ["./ImageStore/main"]

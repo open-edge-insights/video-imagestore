@@ -1,0 +1,41 @@
+{
+  "definitions": {},
+  "type": "object",
+  "required": [
+    "minio"
+  ],
+  "properties": {
+    "minio": {
+      "type": "object",
+      "required": [
+        "accessKey",
+        "secretKey",
+        "retentionTime",
+        "retentionPollInterval",
+        "ssl"
+      ],
+      "properties": {
+        "accessKey": {
+          "type": "string",
+          "pattern": "^(.*)$"
+        },
+        "secretKey": {
+          "type": "string",
+          "pattern": "^(.*)$"
+        },
+        "retentionTime": {
+          "type": "string",
+          "pattern": "^(.*)$"
+        },
+        "retentionPollInterval": {
+          "type": "string",
+          "pattern": "^(.*)$"
+        },
+        "ssl": {
+          "type": "string",
+          "pattern": "^(.*)$"
+        }
+      }
+    }
+  }
+}

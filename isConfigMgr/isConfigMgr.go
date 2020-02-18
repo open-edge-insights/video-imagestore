@@ -26,6 +26,7 @@ import (
 	configmgr "IEdgeInsights/common/libs/ConfigManager"
 	util "IEdgeInsights/common/util"
 	"encoding/json"
+	"io/ioutil"
 
 	//"fmt"
 	//"strconv"
@@ -73,9 +74,22 @@ func ReadMinIoConfig() (Minio, error) {
 		glog.Infof("Error while getting value of %s, err %s\n", minioConfigPath, err.Error())
 		return minIoConfig, err
 	}
+
+	// Reading schema json
+	schema, err := ioutil.ReadFile("./schema.json")
+	if err != nil {
+		glog.Errorf("Schema file not found")
+		return minIoConfig, err
+	}
+
+	// Validating config json
+	if util.ValidateJSON(string(schema), value) != true {
+		return minIoConfig, err
+	}
+
 	err = json.Unmarshal([]byte(value), &tempConfig)
 	if err != nil {
-		glog.Infof("Error while json.Unmarshal")
+		glog.Errorf("Error while json.Unmarshal")
 		return minIoConfig, err
 	}
 
