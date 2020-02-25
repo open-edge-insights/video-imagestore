@@ -41,7 +41,7 @@ type Configuration struct {
 		AccessKey             string `json:"accessKey"`
 		SecretKey             string `json:"secretKey"`
 		RetentionTime         string `json:"retentionTime"`
-		RetentionPollInterval string `json:"retentionPollInterval"`
+		RetentionPollInterval string `json:"retentionPollInterval,omitempty"`
 		Ssl                   string `json:"ssl"`
 		ReplyEndpoint         string `json:"replyEndpoint"`
 		Host                  string `json:"host"`

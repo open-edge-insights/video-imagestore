@@ -92,7 +92,14 @@ func main() {
 	}
 
 	go StartMinio(respMapMinio)
-	go StartMinioRetentionPolicy(respMapMinio)
+
+	if respMapMinio["RetentionTime"] != "-1" {
+		glog.Infof("Starting Minio retention thread")
+		go StartMinioRetentionPolicy(respMapMinio)
+	} else {
+		glog.Infof("Image retention time is infinite")
+	}
+
 	go startReqReply(respMapMinio, serviceConfig)
 	go startSubScriber(respMapMinio)
 	<-done

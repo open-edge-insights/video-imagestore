@@ -48,8 +48,8 @@ If `AppName` is `ImageStore`, then the app's config would look like as below
 |---	        |---	                                                                                                   |---	                                      |---	             |
 |  accessKey 	|   Username required to access Minio DB	                                                               | Any suitable value                       | Required	     |
 |  secretKey 	|   Password required to access Minio DB	                                                               | Any suitable value             	      | Required         |
-|  retentionTime|   The retention parameter specifies the retention policy to apply for the images stored in Minio DB. | Suitable duration string value as mentioned at https://golang.org/pkg/time/#ParseDuration |   Required        |
-|  retentionPollInterval | Used to set the time interval for checking images for expiration. Expired images will become candidates for deletion and no longer retained |	Suitable duration string value as mentioned at https://golang.org/pkg/time/#ParseDuration  |   Required        |
+|  retentionTime|   The retention parameter specifies the retention policy to apply for the images stored in Minio DB.  In case of infinite retention time, set it to "-1" | Suitable duration string value as mentioned at https://golang.org/pkg/time/#ParseDuration. |   Required        |
+|  retentionPollInterval | Used to set the time interval for checking images for expiration. Expired images will become candidates for deletion and no longer retained. In case of infinite retention time, this attribute will be ignored |	Suitable duration string value as mentioned at https://golang.org/pkg/time/#ParseDuration  |   Required        |
 |  ssl          |  If "true", establishes a secure connection with Minio DB else a non-secure connection                   | "true" or "false"                        |   Required        |
 
 For more details on Etcd and MessageBus endpoint configuration, visit [Etcd_Secrets_and_MsgBus_Endpoint_Configuration](../Etcd_Secrets_and_MsgBus_Endpoint_Configuration.md).
