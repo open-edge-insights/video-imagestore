@@ -71,6 +71,7 @@ COPY --from=common ${GO_WORK_DIR}/common/cmake ${GO_WORK_DIR}/common/cmake
 COPY --from=common /usr/local/lib /usr/local/lib
 COPY --from=common /usr/local/include /usr/local/include
 COPY --from=common ${GO_WORK_DIR}/../EISMessageBus ${GO_WORK_DIR}/../EISMessageBus
+COPY --from=common ${GO_WORK_DIR}/../ConfigManager ${GO_WORK_DIR}/../ConfigManager
 
 # Copying safestringlib to Util
 RUN cd safestringlib && \

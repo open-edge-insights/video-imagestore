@@ -23,7 +23,7 @@ SOFTWARE.
 package isConfigMgr
 
 import (
-	configmgr "IEdgeInsights/common/libs/ConfigManager"
+	configmgr "ConfigManager"
 	util "IEdgeInsights/common/util"
 	"encoding/json"
 	"io/ioutil"
@@ -67,6 +67,9 @@ func ReadMinIoConfig() (Minio, error) {
 	appName := os.Getenv("AppName")
 	config := util.GetCryptoMap(appName)
 	confHandler := configmgr.Init("etcd", config)
+	if confHandler == nil {
+		glog.Fatalf("Config Manager initialization failed...")
+	}
 
 	minioConfigPath := "/" + appName + "/config"
 	value, err := confHandler.GetConfig(minioConfigPath)

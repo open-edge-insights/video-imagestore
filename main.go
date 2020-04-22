@@ -18,7 +18,7 @@ import (
 	imagestore "IEdgeInsights/ImageStore/go/ImageStore"
 	isConfigMgr "IEdgeInsights/ImageStore/isConfigMgr"
 	subManager "IEdgeInsights/ImageStore/subManager"
-	configmgr "IEdgeInsights/common/libs/ConfigManager"
+	configmgr "ConfigManager"
 	util "IEdgeInsights/common/util"
 	cpuidutil "IEdgeInsights/common/util/cpuid"
 	"flag"
@@ -50,7 +50,10 @@ func main() {
 	// Initializing Etcd to set env variables
 	appName := os.Getenv("AppName")
 	cfgMgrConfig := util.GetCryptoMap(appName)
-	_ = configmgr.Init("etcd", cfgMgrConfig)
+	cfgMgrCli := configmgr.Init("etcd", cfgMgrConfig)
+	if cfgMgrCli == nil {
+		glog.Fatal("Config Manager initializtion failed...")
+	}
 
 	flag.Set("logtostderr", "true")
 	flag.Set("stderrthreshold", os.Getenv("GO_LOG_LEVEL"))
