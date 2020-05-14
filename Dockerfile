@@ -1,6 +1,7 @@
 # ImageStore dockerfile
 ARG EIS_VERSION
-FROM ia_eisbase:$EIS_VERSION as eisbase
+ARG DOCKER_REGISTRY
+FROM ${DOCKER_REGISTRY}ia_eisbase:$EIS_VERSION as eisbase
 
 WORKDIR ${GO_WORK_DIR}
 
@@ -61,7 +62,7 @@ RUN mkdir -p ${GO_X_SYS} && \
     cd ${GO_X_SYS} && \
     git checkout -b known_version d0be0721c37eeb5299f245a996a483160fc36940
 
-FROM ia_common:$EIS_VERSION as common
+FROM ${DOCKER_REGISTRY}ia_common:$EIS_VERSION as common
 
 FROM eisbase
 

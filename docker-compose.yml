@@ -12,6 +12,7 @@ services:
         EIS_VERSION: ${EIS_VERSION}
         MINIO_VERSION: ${MINIO_VERSION}
         EIS_UID: ${EIS_UID}
+        DOCKER_REGISTRY: ${DOCKER_REGISTRY}
     image: ${DOCKER_REGISTRY}ia_imagestore:${EIS_VERSION}
     container_name: ia_imagestore
     hostname: ia_imagestore
