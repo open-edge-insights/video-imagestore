@@ -99,7 +99,7 @@ RUN mkdir -p ${GOPATH}/temp/IEdgeInsights/ImageStore && \
 #Removing build dependencies
 RUN apt-get remove -y wget && \
     apt-get remove -y git && \
-    apt-get remove curl && \
+    apt-get remove -y curl && \
     apt-get autoremove -y
 
 COPY schema.json .
