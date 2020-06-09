@@ -97,8 +97,8 @@ COPY --from=common ${GO_WORK_DIR}/../ConfigManager ${GO_WORK_DIR}/../ConfigManag
 COPY --from=common ${GO_WORK_DIR}/../EnvConfig ${GO_WORK_DIR}/../EnvConfig
 
 # Copying safestringlib to Util
-RUN cd safestringlib && \
-    cp -rf libsafestring.a ${GO_WORK_DIR}/common/util/cpuid
+RUN cd common/libs/IntelSafeString/build && \
+    cp -rf libsafestring.so ${GO_WORK_DIR}/common/util/cpuid
 
 RUN cd common/util/cpuid && \
     make -j$(nproc --ignore=2)
