@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-package isConfigMgr
+package isconfigmgr
 
 import (
 	configmgr "ConfigManager"
@@ -36,6 +36,7 @@ import (
 	"github.com/golang/glog"
 )
 
+// Configuration type struct
 type Configuration struct {
 	Minio struct {
 		AccessKey             string `json:"accessKey"`
@@ -48,6 +49,7 @@ type Configuration struct {
 	} `json:"minio"`
 }
 
+// Minio type struct
 type Minio struct {
 	AccessKey             string
 	SecretKey             string
@@ -58,6 +60,7 @@ type Minio struct {
 	Host                  string
 }
 
+// ReadMinIoConfig - function to read Minio configuration
 func ReadMinIoConfig() (Minio, error) {
 
 	var minIoConfig Minio
@@ -103,6 +106,7 @@ func ReadMinIoConfig() (Minio, error) {
 	return minIoConfig, nil
 }
 
+// ReadSubConfig - This function retrieves the subscription info for all the topics in an array
 func ReadSubConfig(topicArray []string) (map[string]interface{}, error) {
 	appName := os.Getenv("AppName")
 
@@ -116,6 +120,7 @@ func ReadSubConfig(topicArray []string) (map[string]interface{}, error) {
 	return subsInfoMap, nil
 }
 
+// ReadServiceConfig - function to read Imagestore server configuration
 func ReadServiceConfig() (map[string]interface{}, error) {
 	appName := os.Getenv("AppName")
 

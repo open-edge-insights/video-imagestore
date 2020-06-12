@@ -24,19 +24,23 @@ package common
 
 //Used to signify trhe code for store command
 
+// ImageHandle - attribute in the request to imagestore server
 const ImageHandle string = "img_handle"
-const ImageStoreSeviceName string = "image_store_service"
+// Command - attribute in the request to imagestore server
 const Command string = "command"
-
+// StoreCode - attribute in the request to imagestore
 const StoreCode string = "store"
+// ReadCode - attribute in the request to imagestore server
 const ReadCode string = "read"
+// Error - attribute in the response by imagestore server
 const Error string = "error"
-
+// MinioPort - Minio service port
 const MinioPort string = "9000"
+// MinioHost - Minio service ip 
 const MinioHost string = "127.0.0.1"
-
+// DevMode - dev_mode of type bool
 var DevMode bool
-
+// Writer - writer of type interface
 type Writer interface {
 	Store(value []byte, keyname string) (string, error)
 }

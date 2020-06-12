@@ -46,7 +46,7 @@ const (
 	maxWorkers int = 100
 )
 
-// Struct for holding the buffers for the store workers
+// DataBuffer - Struct for holding the buffers for the store workers
 type DataBuffer struct {
 	buffer []byte
 	key    string

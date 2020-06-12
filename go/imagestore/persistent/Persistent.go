@@ -20,11 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-// Package Persistent provides concrete implementation of persistent storage types like minio etc., for ImageStore
-package Persistent
+// Package persistent provides concrete implementation of persistent storage types like minio etc., for ImageStore
+package persistent
 
 import (
-	"IEdgeInsights/ImageStore/go/ImageStore/Persistent/minio"
+	"IEdgeInsights/ImageStore/go/imagestore/persistent/minio"
 	"errors"
 	"io"
 	"strings"
@@ -74,12 +74,11 @@ func NewPersistent(storageType string, config map[string]string) (*Persistent, e
 		}
 
 		return &Persistent{storage: storage}, nil
-	} else {
-		msg := "Persistent storage type not supported: " + storageType
-		glog.Errorf(msg)
-		err := errors.New(msg)
-		return nil, err
 	}
+	msg := "Persistent storage type not supported: " + storageType
+	glog.Errorf(msg)
+	err := errors.New(msg)
+	return nil, err
 }
 
 // GetConfgKey is used to get the key to retrieve the configuration from gRPC.

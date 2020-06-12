@@ -29,7 +29,7 @@ import (
 )
 
 
-
+// TestPersistentMinio - function to initialize persistent storage
 func TestPersistentMinio() {
 	config := map[string]string{
 		"Host":          "localhost",

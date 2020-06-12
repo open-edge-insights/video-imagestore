@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-package subManager
+package submanager
 
 import (
 	eismsgbus "EISMessageBus/eismsgbus"
@@ -30,13 +30,14 @@ import (
 	"github.com/golang/glog"
 )
 
+// SubManager - SubManager of type struct
 type SubManager struct {
 	subscribers map[string]*eismsgbus.Subscriber
 	clientMap   map[string]*eismsgbus.MsgbusClient
 	subConfig   map[string]interface{}
 	writers     map[string]common.Writer
 }
-
+// NewSubManager - function to initialize a new SubManager
 func NewSubManager()(*SubManager){
 	var subMgr SubManager
 	subMgr.init()
@@ -56,14 +57,18 @@ func (subMgr *SubManager) close() {
 	}
 }
 
+// RegWriterInterface - RegWriterInterface function
 func (subMgr *SubManager) RegWriterInterface(name string, writer common.Writer) {
 	subMgr.writers[name] = writer
 }
 
+// RegSubscriberList - RegSubscriberList function
 func (subMgr *SubManager) RegSubscriberList(subConfig map[string]interface{}) {
 	subMgr.subConfig = subConfig
 }
 
+// StartAllSubscribers - function to create subscription object for all the topics
+// in topics array
 func (subMgr *SubManager) StartAllSubscribers(topics []string) error {
 
 	glog.Infof("-- subscribe to topics : %v\n", topics)
@@ -96,12 +101,15 @@ func (subMgr *SubManager) StartAllSubscribers(topics []string) error {
 	return nil
 }
 
+// ReceiveFromAll - function to start new go routine which receives a frame from the given subscription
+// topic and writes it to a storage
 func (subMgr *SubManager) ReceiveFromAll() {
 	for topicName, subscriber := range subMgr.subscribers {
 		go Receive(topicName, subMgr.writers[topicName], subscriber)
 	}
 }
 
+// Receive - function to receive image for given topic name and put it into storage
 func Receive(topicName string, writer common.Writer, subscriber *eismsgbus.Subscriber) {
 
 	for {
@@ -114,7 +122,7 @@ func Receive(topicName string, writer common.Writer, subscriber *eismsgbus.Subsc
 				glog.Infof(errMessage)
 				continue
 			}
-			
+
 			if msg.Blob != nil {
 				_, err := writer.Store(msg.Blob, imgHandle)
 
@@ -139,6 +147,7 @@ func Receive(topicName string, writer common.Writer, subscriber *eismsgbus.Subsc
 	}
 }
 
+// StopAllSubscribers - function to close all subscriber objects
 func (subMgr *SubManager) StopAllSubscribers() {
 	for _, sub := range subMgr.subscribers {
 		sub.Close()

@@ -15,9 +15,9 @@ package main
 import (
 	eismsgbus "EISMessageBus/eismsgbus"
 	common "IEdgeInsights/ImageStore/common"
-	imagestore "IEdgeInsights/ImageStore/go/ImageStore"
-	isConfigMgr "IEdgeInsights/ImageStore/isConfigMgr"
-	subManager "IEdgeInsights/ImageStore/subManager"
+	imagestore "IEdgeInsights/ImageStore/go/imagestore"
+	isConfigMgr "IEdgeInsights/ImageStore/isconfigmgr"
+	subManager "IEdgeInsights/ImageStore/submanager"
 	configmgr "ConfigManager"
 	util "IEdgeInsights/common/util"
 	cpuidutil "IEdgeInsights/common/util/cpuid"
@@ -277,7 +277,7 @@ func (s *IsServer) StoreData(blob []byte, keyname string) (string, error) {
 // 2. error
 //    Returns an error object if read fails.
 
-//Function to appned read and return byte data
+// AppendByte - Function to appned read and return byte data
 func AppendByte(slice []byte, data ...byte) []byte {
 	m := len(slice)
 	n := m + len(data)
