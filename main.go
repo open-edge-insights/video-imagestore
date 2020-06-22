@@ -13,14 +13,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package main
 
 import (
+	configmgr "ConfigManager"
 	eismsgbus "EISMessageBus/eismsgbus"
 	common "IEdgeInsights/ImageStore/common"
 	imagestore "IEdgeInsights/ImageStore/go/imagestore"
 	isConfigMgr "IEdgeInsights/ImageStore/isconfigmgr"
 	subManager "IEdgeInsights/ImageStore/submanager"
-	configmgr "ConfigManager"
 	util "IEdgeInsights/common/util"
-	cpuidutil "IEdgeInsights/common/util/cpuid"
 	"flag"
 	"io"
 	"os"
@@ -60,12 +59,6 @@ func main() {
 	flag.Set("v", os.Getenv("GO_VERBOSE"))
 
 	glog.Infof("=============== STARTING imagestore ===============")
-
-	vendorName := cpuidutil.Cpuid()
-	if vendorName != "GenuineIntel" {
-		glog.Errorf("*****Software runs only on Intel's hardware*****")
-		os.Exit(-1)
-	}
 
 	common.DevMode, _ = strconv.ParseBool(os.Getenv("DEV_MODE"))
 	minIoConfig, err := isConfigMgr.ReadMinIoConfig()

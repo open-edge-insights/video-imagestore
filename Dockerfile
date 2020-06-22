@@ -96,13 +96,6 @@ COPY --from=common ${GO_WORK_DIR}/../EISMessageBus ${GO_WORK_DIR}/../EISMessageB
 COPY --from=common ${GO_WORK_DIR}/../ConfigManager ${GO_WORK_DIR}/../ConfigManager
 COPY --from=common ${GO_WORK_DIR}/../EnvConfig ${GO_WORK_DIR}/../EnvConfig
 
-# Copying safestringlib to Util
-RUN cd common/libs/IntelSafeString/build && \
-    cp -rf libsafestring.so ${GO_WORK_DIR}/common/util/cpuid
-
-RUN cd common/util/cpuid && \
-    make -j$(nproc --ignore=2)
-
 COPY . ./ImageStore/
 
 RUN go build -o ${GO_WORK_DIR}/ImageStore/main ImageStore/main.go
