@@ -39,6 +39,7 @@ services:
     hostname: ia_imagestore
     network_mode: host
     restart: unless-stopped
+    ipc: "none"
     environment:
       AppName: "ImageStore"
       DEV_MODE: ${DEV_MODE}
