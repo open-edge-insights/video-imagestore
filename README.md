@@ -53,18 +53,3 @@ If `AppName` is `ImageStore`, then the app's config would look like as below
 |  ssl          |  If "true", establishes a secure connection with Minio DB else a non-secure connection                   | "true" or "false"                        |   Required        |
 
 For more details on Etcd and MessageBus endpoint configuration, visit [Etcd_Secrets_and_MsgBus_Endpoint_Configuration](../Etcd_Secrets_and_MsgBus_Endpoint_Configuration.md).
-
-## `Installation`
-
-* Follow [provision/README.md](../README#provision-eis.md) for EIS provisioning
-  if not done already as part of EIS stack setup
-
-* Run ImageStore
-
-  Present working directory to try out below commands is: `[repo]/ImageStore`
-
-    1. Build and Run VideoAnalytics as container
-        ```
-        $ cd [repo]/build
-        $ docker-compose up --build ImageStore
-        ```
