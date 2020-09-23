@@ -1,5 +1,5 @@
 {
-    "/ImageStore/config": {
+    "config": {
         "minio": {
             "accessKey": "admin",
             "secretKey": "password",
@@ -8,5 +8,5 @@
             "ssl": "false"
         }
     },
-    "/ImageStore/interfaces": {}
+    "interfaces": {}
 }
