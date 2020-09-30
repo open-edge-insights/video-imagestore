@@ -26,7 +26,6 @@ import (
 	eismsgbus "EISMessageBus/eismsgbus"
 	common "IEdgeInsights/ImageStore/common"
 	"errors"
-	"strings"
 	"github.com/golang/glog"
 )
 
@@ -69,18 +68,12 @@ func (subMgr *SubManager) RegSubscriberList(subConfig map[string]interface{}) {
 
 // StartAllSubscribers - function to create subscription object for all the topics
 // in topics array
-func (subMgr *SubManager) StartAllSubscribers(topics []string) error {
+func (subMgr *SubManager) StartAllSubscribers(topics []string, subConfig map[string]interface{}) error {
 
 	glog.Infof("-- subscribe to topics : %v\n", topics)
 	for _, topic := range topics {
-		infoMap, ok := subMgr.subConfig[topic].(map[string]interface{})
-		if ok == false {
-			errorMessage := "Error in getting the topic info of " + topic
-			return errors.New(errorMessage)
-		}
-
-		glog.Infof("-- Info map for topic %v : %v -- \n", topic, infoMap)
-		client, err := eismsgbus.NewMsgbusClient(infoMap)
+		glog.Infof("-- Info map for topic %v : %v -- \n", topic, subConfig)
+		client, err := eismsgbus.NewMsgbusClient(subConfig)
 		if err != nil {
 			glog.Infof("-- Error initializing message bus context: %v\n", err)
 			errorMessage := "-- Error initializing message bus context: " + err.Error()
@@ -88,8 +81,7 @@ func (subMgr *SubManager) StartAllSubscribers(topics []string) error {
 		}
 
 		subMgr.clientMap[topic] = client
-		subTopics := strings.Split(topic, "/")
-		subscriber, err := client.NewSubscriber(subTopics[1])
+		subscriber, err := client.NewSubscriber(topic)
 		if err != nil {
 			glog.Infof("-- Error subscribing to topic: %v\n", err)
 			return err

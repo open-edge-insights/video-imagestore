@@ -23,15 +23,9 @@ SOFTWARE.
 package isconfigmgr
 
 import (
-	configmgr "ConfigManager"
 	util "IEdgeInsights/common/util"
 	"encoding/json"
 	"io/ioutil"
-	//"fmt"
-	//"strconv"
-	common "IEdgeInsights/ImageStore/common"
-	envconfig "EnvConfig"
-	"os"
 
 	"github.com/golang/glog"
 )
@@ -61,22 +55,13 @@ type Minio struct {
 }
 
 // ReadMinIoConfig - function to read Minio configuration
-func ReadMinIoConfig() (Minio, error) {
+func ReadMinIoConfig(conf map[string]interface{}) (Minio, error) {
 
 	var minIoConfig Minio
 	var tempConfig Configuration
-
-	appName := os.Getenv("AppName")
-	config := util.GetCryptoMap(appName)
-	confHandler := configmgr.Init("etcd", config)
-	if confHandler == nil {
-		glog.Fatalf("Config Manager initialization failed...")
-	}
-
-	minioConfigPath := "/" + appName + "/config"
-	value, err := confHandler.GetConfig(minioConfigPath)
+	value, err := json.Marshal(conf)
 	if err != nil {
-		glog.Infof("Error while getting value of %s, err %s\n", minioConfigPath, err.Error())
+		glog.Errorf("Error:Conversion from json to string")
 		return minIoConfig, err
 	}
 
@@ -88,11 +73,11 @@ func ReadMinIoConfig() (Minio, error) {
 	}
 
 	// Validating config json
-	if util.ValidateJSON(string(schema), value) != true {
+	if util.ValidateJSON(string(schema), string(value)) != true {
 		return minIoConfig, err
 	}
 
-	err = json.Unmarshal([]byte(value), &tempConfig)
+	err = json.Unmarshal([]byte(string(value)), &tempConfig)
 	if err != nil {
 		glog.Errorf("Error while json.Unmarshal")
 		return minIoConfig, err
@@ -104,27 +89,4 @@ func ReadMinIoConfig() (Minio, error) {
 	minIoConfig.RetentionPollInterval = tempConfig.Minio.RetentionPollInterval
 	minIoConfig.Ssl = tempConfig.Minio.Ssl
 	return minIoConfig, nil
-}
-
-// ReadSubConfig - This function retrieves the subscription info for all the topics in an array
-func ReadSubConfig(topicArray []string) (map[string]interface{}, error) {
-	appName := os.Getenv("AppName")
-
-	subsInfoMap := make(map[string]interface{})
-	cfgMgrConfig := util.GetCryptoMap(appName)
-	glog.Info("config for etcd client : %v", cfgMgrConfig)
-	for _, topic := range topicArray {
-		subsInfoMap[topic] = envconfig.GetMessageBusConfig(topic, "sub", common.DevMode, cfgMgrConfig)
-	}
-
-	return subsInfoMap, nil
-}
-
-// ReadServiceConfig - function to read Imagestore server configuration
-func ReadServiceConfig() (map[string]interface{}, error) {
-	appName := os.Getenv("AppName")
-
-	cfgMgrConfig := util.GetCryptoMap(appName)
-	glog.Info("config for etcd client : %v", cfgMgrConfig)
-	return envconfig.GetMessageBusConfig(appName, "server", common.DevMode, cfgMgrConfig), nil
 }

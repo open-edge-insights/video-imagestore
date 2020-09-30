@@ -13,19 +13,18 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package main
 
 import (
-	configmgr "ConfigManager"
 	eismsgbus "EISMessageBus/eismsgbus"
 	common "IEdgeInsights/ImageStore/common"
 	imagestore "IEdgeInsights/ImageStore/go/imagestore"
 	isConfigMgr "IEdgeInsights/ImageStore/isconfigmgr"
 	subManager "IEdgeInsights/ImageStore/submanager"
 	util "IEdgeInsights/common/util"
+	eiscfgmgr "ConfigMgr/eisconfigmgr"
+
 	"flag"
 	"io"
 	"os"
 	"os/exec"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/golang/glog"
@@ -46,12 +45,43 @@ func main() {
 
 	flag.Parse()
 
-	// Initializing Etcd to set env variables
-	appName := os.Getenv("AppName")
-	cfgMgrConfig := util.GetCryptoMap(appName)
-	cfgMgrCli := configmgr.Init("etcd", cfgMgrConfig)
-	if cfgMgrCli == nil {
-		glog.Fatal("Config Manager initializtion failed...")
+	configMgr, err := eiscfgmgr.ConfigManager()
+	if err != nil {
+		glog.Errorf("Create ConfigManager instance Error:%v", err)
+		return
+	}
+
+	subCtx, err := configMgr.GetSubscriberByIndex(0)
+	if err != nil {
+		glog.Errorf("Error: %v to GetSubscriberByName", err)
+		return
+	}
+
+	topics := subCtx.GetTopics()
+	if(topics == nil) {
+		glog.Errorf("No subscriber Topics")
+		return
+	}
+
+	subConfig, err := subCtx.GetMsgbusConfig()
+	if err != nil {
+		glog.Errorf("Error: %v to get subscriber MsgbusConfig", err)
+		return
+	}
+
+	// TODO: Replace by getInterfaceVal() call to get "Name"
+	serviceName := "default"
+
+	serverCtx, err := configMgr.GetSeverByIndex(0)
+	if err != nil {
+		glog.Errorf("Error: %v to GetSeverByIndex", err)
+		return
+	}
+	
+	serviceConfig, err := serverCtx.GetMsgbusConfig()
+	if err != nil {
+		glog.Errorf("Error: %v to get server MsgBusConfig", err)
+		return
 	}
 
 	flag.Set("logtostderr", "true")
@@ -60,8 +90,11 @@ func main() {
 
 	glog.Infof("=============== STARTING imagestore ===============")
 
-	common.DevMode, _ = strconv.ParseBool(os.Getenv("DEV_MODE"))
-	minIoConfig, err := isConfigMgr.ReadMinIoConfig()
+	appConfig, err := configMgr.GetAppConfig()
+
+	common.DevMode, _ = configMgr.IsDevMode()
+
+	minIoConfig, err := isConfigMgr.ReadMinIoConfig(appConfig)
 	if err != nil {
 		glog.Errorf("Error while reading config :" + err.Error())
 		os.Exit(-1)
@@ -81,12 +114,6 @@ func main() {
 
 	done := make(chan bool)
 
-	serviceConfig, err := isConfigMgr.ReadServiceConfig()
-	if err != nil {
-		glog.Errorf("Error in processing the serviceConfig")
-		os.Exit(-1)
-	}
-
 	go StartMinio(respMapMinio)
 
 	if respMapMinio["RetentionTime"] != "-1" {
@@ -96,33 +123,26 @@ func main() {
 		glog.Infof("Image retention time is infinite")
 	}
 
-	go startReqReply(respMapMinio, serviceConfig)
-	go startSubScriber(respMapMinio)
+	go startReqReply(respMapMinio, serviceName, serviceConfig)
+	
+	
+	go startSubScriber(respMapMinio, topics, subConfig)
 	<-done
 	glog.Infof("**************Exiting**************")
 }
 
-func startSubScriber(minioConfigMap map[string]string) {
+func startSubScriber(minioConfigMap map[string]string, topicArray []string, subConfig map[string]interface{}) {
 
 	glog.Infof("**************In startSubScriber**************")
-
-	topics := os.Getenv("SubTopics")
-	topicArray := strings.Split(topics, ",")
 
 	if len(topicArray) <= 0 {
 		glog.Errorf("suscriber list empty")
 		os.Exit(-1)
 	}
-
-	subConfig, err := isConfigMgr.ReadSubConfig(topicArray)
-	if err != nil {
-		glog.Errorf("Error in processing the config")
-		os.Exit(-1)
-	}
-
+	
 	subMgr := subManager.NewSubManager()
 	subMgr.RegSubscriberList(subConfig)
-	subMgr.StartAllSubscribers(topicArray)
+	subMgr.StartAllSubscribers(topicArray, subConfig)
 
 	for _, topic := range topicArray {
 		is, err := imagestore.GetImageStoreInstance(minioConfigMap)
@@ -134,7 +154,7 @@ func startSubScriber(minioConfigMap map[string]string) {
 	subMgr.ReceiveFromAll()
 }
 
-func startReqReply(minioConfigMap map[string]string, serviceConfig map[string]interface{}) {
+func startReqReply(minioConfigMap map[string]string, serviceName string, serviceConfig map[string]interface{}) {
 
 	var ser IsServer
 	is, err := imagestore.GetImageStoreInstance(minioConfigMap)
@@ -151,8 +171,7 @@ func startReqReply(minioConfigMap map[string]string, serviceConfig map[string]in
 	}
 	defer client.Close()
 
-	serviceName := os.Getenv("AppName")
-	glog.Infof("-- Initializing service %s\n", serviceName)
+	glog.Infof("-- Initializing service %v", serviceName)
 	service, err := client.NewService(serviceName)
 	if err != nil {
 		glog.Errorf("-- Error initializing service: %v\n", err)
