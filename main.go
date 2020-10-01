@@ -69,8 +69,17 @@ func main() {
 		return
 	}
 
-	// TODO: Replace by getInterfaceVal() call to get "Name"
-	serviceName := "default"
+	interfaceVal, err := subCtx.GetInterfaceValue("Name")
+	if(err != nil){
+		glog.Errorf("Error to GetInterfaceValue of 'Name': %v\n", err)
+		return
+	}
+
+	serviceName, err := interfaceVal.GetString()
+	if(err != nil) {
+		glog.Errorf("Error to GetString value of 'Name'%v\n", err)
+		return
+	}
 
 	serverCtx, err := configMgr.GetServerByIndex(0)
 	if err != nil {
