@@ -72,9 +72,9 @@ func main() {
 	// TODO: Replace by getInterfaceVal() call to get "Name"
 	serviceName := "default"
 
-	serverCtx, err := configMgr.GetSeverByIndex(0)
+	serverCtx, err := configMgr.GetServerByIndex(0)
 	if err != nil {
-		glog.Errorf("Error: %v to GetSeverByIndex", err)
+		glog.Errorf("Error: %v to GetServerByIndex", err)
 		return
 	}
 	
