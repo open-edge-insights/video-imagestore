@@ -92,14 +92,10 @@ spec:
           value: "/run/secrets/etcd_ImageStore_key/ImageStore_client_key.pem"
 
         # MessageBus Endpoint Configuration
-        - name: Server
-          value: "zmq_tcp,0.0.0.0:5669"
-        - name: Clients
-          value: "Visualizer,RestDataExport"
-        - name: SubTopics
-          value: "VideoAnalytics/camera1_stream_results"
-        - name: camera1_stream_results_cfg
-          value: "zmq_tcp,videoanalytics:65013"
+        - name: SERVER_ENDPOINT
+          value: "0.0.0.0:5669"
+        - name: SUBSCRIBER_ENDPOINT
+          value: "videoanalytics:65013"
 
       volumes:
       - name: eis-socket

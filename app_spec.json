@@ -19,11 +19,8 @@
             "ETCD_PREFIX": "$ETCD_PREFIX",
             "DEV_MODE": "$DEV_MODE",
             "PROFILING_MODE": "false",
-            "ZMQ_RECV_HWM": "50",
-            "Clients": "RestDataExport",
-            "Server": "zmq_tcp,0.0.0.0:${ep.imsServer.localport}",
-            "SubTopics": "VideoAnalytics/camera1_stream_results",
-            "camera1_stream_results_cfg": "zmq_tcp,${ep.imsSub.remoteaddress}:${ep.imsSub.remoteport}"
+            "SERVER_ENDPOINT": "0.0.0.0:${ep.imsServer.localport}",
+            "SUBSCRIBER_ENDPOINT": "${ep.imsSub.remoteaddress}:${ep.imsSub.remoteport}"
         },
         "Endpoints": [
             {
