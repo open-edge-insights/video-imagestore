@@ -51,11 +51,15 @@ func main() {
 		return
 	}
 
+	defer configMgr.Destroy()
+
 	subCtx, err := configMgr.GetSubscriberByIndex(0)
 	if err != nil {
 		glog.Errorf("Error: %v to GetSubscriberByName", err)
 		return
 	}
+
+	defer subCtx.Destroy()
 
 	topics, err := subCtx.GetTopics()
 	if err != nil {
@@ -74,6 +78,8 @@ func main() {
 		glog.Errorf("Error: %v to GetServerByIndex", err)
 		return
 	}
+
+	defer serverCtx.Destroy()
 
 	interfaceVal, err := serverCtx.GetInterfaceValue("Name")
 	if err != nil {
