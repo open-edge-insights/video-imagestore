@@ -26,6 +26,7 @@ import (
 	eismsgbus "EISMessageBus/eismsgbus"
 	common "IEdgeInsights/ImageStore/common"
 	"errors"
+
 	"github.com/golang/glog"
 )
 
@@ -36,8 +37,9 @@ type SubManager struct {
 	subConfig   map[string]interface{}
 	writers     map[string]common.Writer
 }
+
 // NewSubManager - function to initialize a new SubManager
-func NewSubManager()(*SubManager){
+func NewSubManager() *SubManager {
 	var subMgr SubManager
 	subMgr.init()
 	return &subMgr
@@ -72,7 +74,6 @@ func (subMgr *SubManager) StartAllSubscribers(topics []string, subConfig map[str
 
 	glog.Infof("-- subscribe to topics : %v\n", topics)
 	for _, topic := range topics {
-		glog.Infof("-- Info map for topic %v : %v -- \n", topic, subConfig)
 		client, err := eismsgbus.NewMsgbusClient(subConfig)
 		if err != nil {
 			glog.Infof("-- Error initializing message bus context: %v\n", err)

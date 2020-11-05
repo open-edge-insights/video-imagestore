@@ -13,13 +13,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package main
 
 import (
+	eiscfgmgr "ConfigMgr/eisconfigmgr"
 	eismsgbus "EISMessageBus/eismsgbus"
 	common "IEdgeInsights/ImageStore/common"
 	imagestore "IEdgeInsights/ImageStore/go/imagestore"
 	isConfigMgr "IEdgeInsights/ImageStore/isconfigmgr"
 	subManager "IEdgeInsights/ImageStore/submanager"
 	util "IEdgeInsights/common/util"
-	eiscfgmgr "ConfigMgr/eisconfigmgr"
 
 	"flag"
 	"io"
@@ -57,9 +57,9 @@ func main() {
 		return
 	}
 
-	topics := subCtx.GetTopics()
-	if(topics == nil) {
-		glog.Errorf("No subscriber Topics")
+	topics, err := subCtx.GetTopics()
+	if err != nil {
+		glog.Errorf("Failed to fetch topics : %v", err)
 		return
 	}
 
@@ -69,24 +69,24 @@ func main() {
 		return
 	}
 
-	interfaceVal, err := subCtx.GetInterfaceValue("Name")
-	if(err != nil){
-		glog.Errorf("Error to GetInterfaceValue of 'Name': %v\n", err)
-		return
-	}
-
-	serviceName, err := interfaceVal.GetString()
-	if(err != nil) {
-		glog.Errorf("Error to GetString value of 'Name'%v\n", err)
-		return
-	}
-
 	serverCtx, err := configMgr.GetServerByIndex(0)
 	if err != nil {
 		glog.Errorf("Error: %v to GetServerByIndex", err)
 		return
 	}
-	
+
+	interfaceVal, err := serverCtx.GetInterfaceValue("Name")
+	if err != nil {
+		glog.Errorf("Error to GetInterfaceValue of 'Name': %v\n", err)
+		return
+	}
+
+	serviceName, err := interfaceVal.GetString()
+	if err != nil {
+		glog.Errorf("Error to GetString value of 'Name'%v\n", err)
+		return
+	}
+
 	serviceConfig, err := serverCtx.GetMsgbusConfig()
 	if err != nil {
 		glog.Errorf("Error: %v to get server MsgBusConfig", err)
@@ -133,8 +133,7 @@ func main() {
 	}
 
 	go startReqReply(respMapMinio, serviceName, serviceConfig)
-	
-	
+
 	go startSubScriber(respMapMinio, topics, subConfig)
 	<-done
 	glog.Infof("**************Exiting**************")
@@ -148,7 +147,7 @@ func startSubScriber(minioConfigMap map[string]string, topicArray []string, subC
 		glog.Errorf("suscriber list empty")
 		os.Exit(-1)
 	}
-	
+
 	subMgr := subManager.NewSubManager()
 	subMgr.RegSubscriberList(subConfig)
 	subMgr.StartAllSubscribers(topicArray, subConfig)
