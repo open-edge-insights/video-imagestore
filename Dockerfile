@@ -117,4 +117,6 @@ RUN apt-get remove -y wget && \
 
 COPY schema.json .
 
+HEALTHCHECK NONE
+
 ENTRYPOINT ["./ImageStore/main"]
