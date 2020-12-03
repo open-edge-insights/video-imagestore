@@ -2,7 +2,7 @@
     "SchemaVersion": "0.2",
     "Runtime": "docker",
     "RuntimeOptions": {
-        "ContainerImage": "ia_imagestore:$EIS_VERSION",
+        "ContainerImage": "${idx:ia_imagestore:$EIS_VERSION}",
         "TemporaryVolumes": [
             "$EIS_INSTALL_PATH/data:/data"
         ]
