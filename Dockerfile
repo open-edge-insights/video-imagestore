@@ -62,8 +62,8 @@ RUN chmod +x minio
 
 ARG EIS_UID
 
-RUN mkdir /.minio && \
-    chown -R ${EIS_UID} /.minio
+RUN mkdir -p /.minio/certs && \
+    chown -R ${EIS_UID} /.minio/certs
 
 ENV GO_X_NET ${GOPATH}/src/golang.org/x/net
 RUN mkdir -p ${GO_X_NET} && \
