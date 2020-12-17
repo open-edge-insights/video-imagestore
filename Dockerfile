@@ -62,8 +62,7 @@ RUN chmod +x minio
 
 ARG EIS_UID
 
-RUN mkdir -p /.minio/certs && \
-    chown -R ${EIS_UID} /.minio/certs
+RUN mkdir -p .minio/certs/CAs
 
 ENV GO_X_NET ${GOPATH}/src/golang.org/x/net
 RUN mkdir -p ${GO_X_NET} && \
@@ -103,6 +102,7 @@ RUN go build -o ${GO_WORK_DIR}/ImageStore/main ImageStore/main.go
 RUN mkdir -p ${GOPATH}/temp/IEdgeInsights/ImageStore && \
     mv ${GO_WORK_DIR}/ImageStore/main ${GOPATH}/temp/IEdgeInsights/ImageStore/ && \
     mv ${GO_WORK_DIR}/minio ${GOPATH}/temp/IEdgeInsights/ && \
+    mv ${GO_WORK_DIR}/.minio ${GOPATH}/temp/IEdgeInsights/ && \
     rm -rf ${GOPATH}/src && \
     rm -rf ${GOPATH}/bin/dep && \
     rm -rf ${GOPATH}/pkg && \
