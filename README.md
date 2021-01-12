@@ -52,4 +52,6 @@ If `AppName` is `ImageStore`, then the app's config would look like as below
 |  retentionPollInterval | Used to set the time interval for checking images for expiration. Expired images will become candidates for deletion and no longer retained. In case of infinite retention time, this attribute will be ignored |	Suitable duration string value as mentioned at https://golang.org/pkg/time/#ParseDuration  |   Required        |
 |  ssl          |  If "true", establishes a secure connection with Minio DB else a non-secure connection                   | "true" or "false"                        |   Required        |
 
-For more details on Etcd and MessageBus endpoint configuration, visit [Etcd_Secrets_and_MsgBus_Endpoint_Configuration](../Etcd_Secrets_and_MsgBus_Endpoint_Configuration.md).
+For more details on Etcd secrets and messagebus endpoint configuration, visit [Etcd_Secrets_Configuration.md](../Etcd_Secrets_Configuration.md) and
+[MessageBus Configuration](../common/libs/ConfigMgr/README.md#interfaces) respectively.
+
