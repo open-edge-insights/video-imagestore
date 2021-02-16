@@ -13,8 +13,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package main
 
 import (
-	eiscfgmgr "ConfigMgr/eisconfigmgr"
-	eismsgbus "EISMessageBus/eismsgbus"
+	eiicfgmgr "ConfigMgr/eiiconfigmgr"
+	eiimsgbus "EIIMessageBus/eiimsgbus"
 	common "IEdgeInsights/ImageStore/common"
 	imagestore "IEdgeInsights/ImageStore/go/imagestore"
 	isConfigMgr "IEdgeInsights/ImageStore/isconfigmgr"
@@ -45,7 +45,7 @@ func main() {
 
 	flag.Parse()
 
-	configMgr, err := eiscfgmgr.ConfigManager()
+	configMgr, err := eiicfgmgr.ConfigManager()
 	if err != nil {
 		glog.Errorf("Create ConfigManager instance Error:%v", err)
 		return
@@ -178,7 +178,7 @@ func startReqReply(minioConfigMap map[string]string, serviceName string, service
 		os.Exit(-1)
 	}
 
-	client, err := eismsgbus.NewMsgbusClient(serviceConfig)
+	client, err := eiimsgbus.NewMsgbusClient(serviceConfig)
 	if err != nil {
 		glog.Errorf("-- Error initializing message bus context: %v\n", err)
 		os.Exit(-1)
@@ -236,12 +236,12 @@ func startReqReply(minioConfigMap map[string]string, serviceName string, service
 	}
 }
 
-func handleError(service *eismsgbus.Service, errMessage string) {
+func handleError(service *eiimsgbus.Service, errMessage string) {
 	glog.Errorf(errMessage)
 	service.Response(map[string]interface{}{common.Error: errMessage})
 }
 
-func handleReadCommand(imgHandle string, service *eismsgbus.Service, ser IsServer) {
+func handleReadCommand(imgHandle string, service *eiimsgbus.Service, ser IsServer) {
 
 	frame, err := ser.Read(imgHandle)
 
@@ -259,7 +259,7 @@ func handleReadCommand(imgHandle string, service *eismsgbus.Service, ser IsServe
 	}
 }
 
-func handleStoreCommand(imgHandle string, service *eismsgbus.Service, ser IsServer, imgFrame []byte) {
+func handleStoreCommand(imgHandle string, service *eiimsgbus.Service, ser IsServer, imgFrame []byte) {
 	key, err := ser.StoreData(imgFrame, imgHandle)
 	if err != nil {
 		error := "Store image failed for handle " + imgHandle + " Error :" + err.Error()

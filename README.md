@@ -1,7 +1,7 @@
 # `ImageStore Module`
 
-The Image Store component of EIS comes as a separate container which primarily
-subscribes to the stream that comes out of the VideoAnalytics app via EIS
+The Image Store component of EII comes as a separate container which primarily
+subscribes to the stream that comes out of the VideoAnalytics app via EII
 MessageBus and stores the frame into minio for historical analysis.
 
 The high level logical flow of ImageStore is as below:

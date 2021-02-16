@@ -29,12 +29,12 @@ services:
       context: $PWD/../ImageStore
       dockerfile: $PWD/../ImageStore/Dockerfile
       args:
-        EIS_VERSION: ${EIS_VERSION}
+        EII_VERSION: ${EII_VERSION}
         MINIO_VERSION: ${MINIO_VERSION}
-        EIS_UID: ${EIS_UID}
+        EII_UID: ${EII_UID}
         DOCKER_REGISTRY: ${DOCKER_REGISTRY}
     read_only : true
-    image: ${DOCKER_REGISTRY}ia_imagestore:${EIS_VERSION}
+    image: ${DOCKER_REGISTRY}ia_imagestore:${EII_VERSION}
     container_name: ia_imagestore
     hostname: ia_imagestore
     network_mode: host
@@ -48,16 +48,16 @@ services:
     environment:
       AppName: "ImageStore"
       DEV_MODE: ${DEV_MODE}
-      no_proxy: ${eis_no_proxy},${ETCD_HOST}
+      no_proxy: ${eii_no_proxy},${ETCD_HOST}
       ETCD_HOST: ${ETCD_HOST}
       ETCD_CLIENT_PORT: ${ETCD_CLIENT_PORT}
       ETCD_PREFIX: ${ETCD_PREFIX}
       CertType: "zmq"
     volumes:
       - "vol_imagestore_data:/data"
-      - "vol_eis_socket:${SOCKET_DIR}"
+      - "vol_eii_socket:${SOCKET_DIR}"
       - "vol_imagestore_conf:/tmp"
-    user: ${EIS_UID}
+    user: ${EII_UID}
     secrets:
       - ca_etcd
       - etcd_ImageStore_cert
@@ -69,7 +69,7 @@ volumes:
     driver_opts:
       type: local
       o: bind
-      device: ${EIS_INSTALL_PATH}/data
+      device: ${EII_INSTALL_PATH}/data
   vol_imagestore_conf:
     driver: local
     driver_opts:

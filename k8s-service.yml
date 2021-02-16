@@ -22,7 +22,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: imagestore
-  namespace: eis
+  namespace: eii
 spec:
   selector:
     app: imagestore
@@ -36,7 +36,7 @@ metadata:
   labels:
     app: imagestore
   name: deployment-imagestore
-  namespace: eis
+  namespace: eii
 
 spec:
   replicas: 1
@@ -50,11 +50,11 @@ spec:
     spec:
       containers:
       - name: ia-imagestore
-        image: ${DOCKER_REGISTRY}ia_imagestore:${EIS_VERSION}
+        image: ${DOCKER_REGISTRY}ia_imagestore:${EII_VERSION}
         securityContext:
           privileged: true
         volumeMounts:
-        - name: eis-socket
+        - name: eii-socket
           mountPath: ${SOCKET_DIR}
         - name: imagestoredata
           mountPath: /data
@@ -73,7 +73,7 @@ spec:
         - name: PROFILING_MODE
           value: '${PROFILING_MODE}'
         - name: no_proxy
-          value: '${eis_no_proxy},${ETCD_HOST}'
+          value: '${eii_no_proxy},${ETCD_HOST}'
         - name: ETCD_HOST
           value: etcd
         - name: ETCD_CLIENT_PORT
@@ -98,12 +98,12 @@ spec:
           value: "videoanalytics:65013"
 
       volumes:
-      - name: eis-socket
+      - name: eii-socket
         hostPath:
-          path: ${EIS_INSTALL_PATH}/sockets
+          path: ${EII_INSTALL_PATH}/sockets
       - name: imagestoredata
         hostPath:
-          path: ${EIS_INSTALL_PATH}/data
+          path: ${EII_INSTALL_PATH}/data
       - name: "ca-cert"
         secret:
           secretName: ca-etcd
