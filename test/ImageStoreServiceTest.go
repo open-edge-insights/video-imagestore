@@ -23,7 +23,7 @@ SOFTWARE.
 package main
 
 import (
-	eismsgbus "EISMessageBus/eismsgbus"
+	eiimsgbus "EIIMessageBus/eiimsgbus"
 	common "IEdgeInsights/ImageStore/common"
 	envconfig "EnvConfig"
 	"bytes"
@@ -56,7 +56,7 @@ func main() {
 	config := envconfig.GetMessageBusConfig("ImageStore", "client", devMode, cfgMgrConfig)
 
 	fmt.Println("-- Initializing message bus context %v\n", config)
-	client, err := eismsgbus.NewMsgbusClient(config)
+	client, err := eiimsgbus.NewMsgbusClient(config)
 	if err != nil {
 		fmt.Printf("-- Error initializing message bus context: %v\n", err)
 		return

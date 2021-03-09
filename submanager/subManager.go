@@ -23,7 +23,7 @@ SOFTWARE.
 package submanager
 
 import (
-	eismsgbus "EISMessageBus/eismsgbus"
+	eiimsgbus "EIIMessageBus/eiimsgbus"
 	common "IEdgeInsights/ImageStore/common"
 	"errors"
 
@@ -32,8 +32,8 @@ import (
 
 // SubManager - SubManager of type struct
 type SubManager struct {
-	subscribers map[string]*eismsgbus.Subscriber
-	clientMap   map[string]*eismsgbus.MsgbusClient
+	subscribers map[string]*eiimsgbus.Subscriber
+	clientMap   map[string]*eiimsgbus.MsgbusClient
 	subConfig   map[string]interface{}
 	writers     map[string]common.Writer
 }
@@ -47,8 +47,8 @@ func NewSubManager() *SubManager {
 
 func (subMgr *SubManager) init() {
 	subMgr.writers = make(map[string]common.Writer)
-	subMgr.subscribers = make(map[string]*eismsgbus.Subscriber)
-	subMgr.clientMap = make(map[string]*eismsgbus.MsgbusClient)
+	subMgr.subscribers = make(map[string]*eiimsgbus.Subscriber)
+	subMgr.clientMap = make(map[string]*eiimsgbus.MsgbusClient)
 }
 
 func (subMgr *SubManager) close() {
@@ -74,7 +74,7 @@ func (subMgr *SubManager) StartAllSubscribers(topics []string, subConfig map[str
 
 	glog.Infof("-- subscribe to topics : %v\n", topics)
 	for _, topic := range topics {
-		client, err := eismsgbus.NewMsgbusClient(subConfig)
+		client, err := eiimsgbus.NewMsgbusClient(subConfig)
 		if err != nil {
 			glog.Infof("-- Error initializing message bus context: %v\n", err)
 			errorMessage := "-- Error initializing message bus context: " + err.Error()
@@ -103,7 +103,7 @@ func (subMgr *SubManager) ReceiveFromAll() {
 }
 
 // Receive - function to receive image for given topic name and put it into storage
-func Receive(topicName string, writer common.Writer, subscriber *eismsgbus.Subscriber) {
+func Receive(topicName string, writer common.Writer, subscriber *eiimsgbus.Subscriber) {
 
 	for {
 		select {
