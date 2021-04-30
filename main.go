@@ -224,7 +224,7 @@ func startReqReply(minioConfigMap map[string]string, serviceName string, service
 			handleReadCommand(imgHandle, service, ser)
 		} else if command == common.StoreCode {
 			if msg.Blob != nil {
-				handleStoreCommand(imgHandle, service, ser, msg.Blob)
+				handleStoreCommand(imgHandle, service, ser, msg.Blob[0])
 			} else {
 				errMessage = "Can not store empty image for handle " + imgHandle
 				handleError(service, errMessage)
