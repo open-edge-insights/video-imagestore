@@ -117,7 +117,7 @@ func Receive(topicName string, writer common.Writer, subscriber *eiimsgbus.Subsc
 			}
 
 			if msg.Blob != nil {
-				_, err := writer.Store(msg.Blob, imgHandle)
+				_, err := writer.Store(msg.Blob[0], imgHandle)
 
 				if err != nil {
 					errMessage := "Error In storing the image %s from topic %s & Error %s"
