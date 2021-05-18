@@ -1,0 +1,10 @@
+config:
+    imagestore:
+      name: imagestore
+      server_port: 5669
+volumes:
+  imagestoredata:
+    name: vol-imagestoredata
+    size: 1Gi
+    location: "/data"
+    hostpath: "/opt/intel/eii/data"
