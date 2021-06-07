@@ -2,6 +2,7 @@ config:
     imagestore:
       name: imagestore
       server_port: 5669
+      IPC: false
 volumes:
   imagestoredata:
     name: vol-imagestoredata
