@@ -50,7 +50,7 @@ spec:
     spec:
       containers:
       - name: ia-imagestore
-        image: {{ .Values.DOCKER_REGISTRY }}ia_imagestore:{{ .Values.EII_VERSION }}
+        image: {{ .Values.DOCKER_REGISTRY }}openedgeinsights/ia_imagestore:{{ .Values.EII_VERSION }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
           privileged: true
