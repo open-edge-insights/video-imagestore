@@ -48,6 +48,10 @@ spec:
       labels:
         app: imagestore
     spec:
+      {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
       containers:
       - name: ia-imagestore
         image: {{ .Values.DOCKER_REGISTRY }}openedgeinsights/ia_imagestore:{{ .Values.EII_VERSION }}
