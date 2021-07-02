@@ -15,8 +15,7 @@
                 "Type": "zmq_tcp",
                 "EndPoint": "0.0.0.0:5669",
                 "AllowedClients": [
-                    "Visualizer",
-                    "RestDataExport"
+                    "*"
                 ]
             }
         ],
