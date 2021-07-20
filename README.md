@@ -1,3 +1,9 @@
+**Contents**
+
+- [`ImageStore Module`](#imagestore-module)
+  - [`Configuration`](#configuration)
+    - [`Detailed description on each of the keys used`](#detailed-description-on-each-of-the-keys-used)
+
 # `ImageStore Module`
 
 The Image Store component of EII comes as a separate container which primarily
