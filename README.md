@@ -1,10 +1,10 @@
 **Contents**
 
-- [`ImageStore Module`](#imagestore-module)
-  - [`Configuration`](#configuration)
-    - [`Detailed description on each of the keys used`](#detailed-description-on-each-of-the-keys-used)
+- [ImageStore Module](#imagestore-module)
+  - [Configuration](#configuration)
+    - [Detailed description on each of the keys used](#detailed-description-on-each-of-the-keys-used)
 
-# `ImageStore Module`
+# ImageStore Module
 
 The Image Store component of EII comes as a separate container which primarily
 subscribes to the stream that comes out of the VideoAnalytics app via EII
@@ -29,7 +29,7 @@ The high level logical flow of ImageStore is as below:
         Response : map ("img_handle":"$handle_name", "error":"$error_msg"),[]byte($binaryImage) ("error" is optional and available only in case of error in execution. And $binaryImage is available only in case of successful read)
      ```
 
-## `Configuration`
+## Configuration
 
 All the ImageStore module configuration are added into etcd (distributed
 key-value data store) under `AppName` as mentioned in the
@@ -49,7 +49,7 @@ If `AppName` is `ImageStore`, then the app's config would look like as below
     }
  ```
 
-### `Detailed description on each of the keys used`
+### Detailed description on each of the keys used
 |  Key	        | Description 	                                                                                           | Possible Values  	                      |Required/Optional |
 |---	        |---	                                                                                                   |---	                                      |---	             |
 |  accessKey 	|   Username required to access Minio DB	                                                               | Any suitable value                       | Required	     |
