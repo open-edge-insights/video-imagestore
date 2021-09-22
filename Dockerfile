@@ -112,7 +112,12 @@ ARG CMAKE_INSTALL_PREFIX
 ENV CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
 COPY --from=builder ${CMAKE_INSTALL_PREFIX}/lib ${CMAKE_INSTALL_PREFIX}/lib
 COPY --from=builder ${ARTIFACTS}/ .
-RUN mkdir -p .minio/certs/CAs
+RUN mkdir -p .minio/certs/CAs && \
+    mkdir /data &&\
+    chown -R ${EII_UID}:${EII_UID} /data && \
+    chown -R ${EII_UID}:${EII_UID} /tmp/ && \
+    chmod -R 760 /data && \
+    chmod -R 760 /tmp/
 
 USER $EII_USER_NAME
 
