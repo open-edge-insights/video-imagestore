@@ -62,7 +62,12 @@ RUN chmod +x minio
 
 ARG EII_UID
 
-RUN mkdir -p .minio/certs/CAs
+RUN mkdir -p .minio/certs/CAs && \
+    mkdir /data &&\
+    chown -R ${EII_UID}:${EII_UID} /data && \
+    chown -R ${EII_UID}:${EII_UID} /tmp/ && \
+    chmod -R 760 /data && \
+    chmod -R 760 /tmp/
 
 ENV GO_X_NET ${GOPATH}/src/golang.org/x/net
 RUN mkdir -p ${GO_X_NET} && \
