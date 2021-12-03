@@ -24,7 +24,7 @@ SOFTWARE.
 package persistent
 
 import (
-	"IEdgeInsights/ImageStore/go/imagestore/persistent/minio"
+	"imagestore/go/imagestore/persistent/minio"
 	"errors"
 	"io"
 	"strings"

@@ -23,7 +23,7 @@ SOFTWARE.
 package isconfigmgr
 
 import (
-	util "IEdgeInsights/common/util"
+	util "imagestore/util"
 	"encoding/json"
 	"io/ioutil"
 

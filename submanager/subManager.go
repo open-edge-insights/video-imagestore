@@ -23,8 +23,8 @@ SOFTWARE.
 package submanager
 
 import (
-	eiimsgbus "EIIMessageBus/eiimsgbus"
-	common "IEdgeInsights/ImageStore/common"
+	eiimsgbus "github.com/open-edge-insights/eii-messagebus-go/eiimsgbus"
+	common "imagestore/common"
 	"errors"
 
 	"github.com/golang/glog"
