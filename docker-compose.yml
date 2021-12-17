@@ -61,8 +61,8 @@ services:
       - "vol_imagestore_data:/data"
       - "vol_eii_socket:${SOCKET_DIR}"
       - "vol_imagestore_conf:/tmp"
-      - ./Certificates/ImageStore:/Certificates/ImageStore
-      - ./Certificates/rootca:/Certificates/rootca
+      - ./Certificates/ImageStore:/run/secrets/ImageStore
+      - ./Certificates/rootca:/run/secrets/rootca
 
 volumes:
   vol_imagestore_data:
