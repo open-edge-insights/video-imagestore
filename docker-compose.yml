@@ -58,19 +58,13 @@ services:
     networks:
       - eii
     volumes:
-      - "vol_imagestore_data:/data"
+      - "$EII_INSTALL_PATH/data:/data"
       - "vol_eii_socket:${SOCKET_DIR}"
       - "vol_imagestore_conf:/tmp"
       - ./Certificates/ImageStore:/run/secrets/ImageStore
       - ./Certificates/rootca:/run/secrets/rootca
 
 volumes:
-  vol_imagestore_data:
-    driver: local
-    driver_opts:
-      type: local
-      o: bind
-      device: ${EII_INSTALL_PATH}/data
   vol_imagestore_conf:
     driver: local
     driver_opts:
