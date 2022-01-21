@@ -81,12 +81,12 @@ RUN mkdir -p .minio/certs/CAs && \
     chmod -R 760 /data && \
     chmod -R 760 /tmp/
 
-
 #ARG EII_INSTALL_PATH
 ENV EIIUSER=${EII_USER_NAME}
 ENV EIIUID=${EII_UID}
-COPY ./entrypoint.sh .
-RUN chmod +x ./entrypoint.sh
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${CMAKE_INSTALL_PREFIX}/lib
+
+USER ${EII_USER_NAME}
+
 HEALTHCHECK NONE
-ENTRYPOINT ["./entrypoint.sh", "./image-store"]
+ENTRYPOINT ["./image-store"]
