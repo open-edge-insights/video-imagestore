@@ -75,6 +75,10 @@ spec:
           value: "ImageStore"
         - name: DEV_MODE
           value: '{{ .Values.env.DEV_MODE }}'
+        - name: MINIO_ACCESS_KEY
+          value: '{{ .Values.env.MINIO_ACCESS_KEY }}'
+        - name: MINIO_SECRET_KEY
+          value: '{{ .Values.env.MINIO_SECRET_KEY }}'
         - name: ETCD_HOST
           value: {{ .Values.config.etcd.name }}
         - name: ETCD_CLIENT_PORT

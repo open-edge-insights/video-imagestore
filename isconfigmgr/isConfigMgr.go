@@ -23,9 +23,10 @@ SOFTWARE.
 package isconfigmgr
 
 import (
-	util "imagestore/util"
 	"encoding/json"
+	util "imagestore/util"
 	"io/ioutil"
+	"os"
 
 	"github.com/golang/glog"
 )
@@ -83,8 +84,8 @@ func ReadMinIoConfig(conf map[string]interface{}) (Minio, error) {
 		return minIoConfig, err
 	}
 
-	minIoConfig.AccessKey = tempConfig.Minio.AccessKey
-	minIoConfig.SecretKey = tempConfig.Minio.SecretKey
+	minIoConfig.AccessKey = os.Getenv("MINIO_ACCESS_KEY")
+	minIoConfig.SecretKey = os.Getenv("MINIO_SECRET_KEY")
 	minIoConfig.RetentionTime = tempConfig.Minio.RetentionTime
 	minIoConfig.RetentionPollInterval = tempConfig.Minio.RetentionPollInterval
 	minIoConfig.Ssl = tempConfig.Minio.Ssl
