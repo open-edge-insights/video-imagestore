@@ -63,8 +63,8 @@ services:
       - "$EII_INSTALL_PATH/data:/data"
       - "vol_eii_socket:${SOCKET_DIR}"
       - "vol_imagestore_conf:/tmp"
-      - ./Certificates/ImageStore:/run/secrets/ImageStore
-      - ./Certificates/rootca:/run/secrets/rootca
+      - ./Certificates/ImageStore:/run/secrets/ImageStore:ro
+      - ./Certificates/rootca/cacert.pem:/run/secrets/rootca/cacert.pem:ro
 
 volumes:
   vol_imagestore_conf:
