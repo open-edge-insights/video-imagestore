@@ -45,8 +45,6 @@ If `AppName` is `ImageStore`, then the app's config would look like as below
  ```
     "/ImageStore/config": {
         "minio":{
-           "accessKey":"admin",
-           "secretKey":"password",
            "retentionTime":"1h",
            "retentionPollInterval":"60s",
            "ssl":"false"
