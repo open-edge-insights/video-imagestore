@@ -372,7 +372,7 @@ func StartMinio(minioConfigMap map[string]string) {
 
 	// TODO: Need to see a way to pass port while bring
 	// as --address switch didn't work as expected
-	cmd := exec.Command("./minio", "server", "--address", common.MinioHost+":"+common.MinioPort, "--certs-dir=.minio/certs", "--config-dir=/tmp", "/data")
+	cmd := exec.Command("./minio", "server", "--address", common.MinioHost+":"+common.MinioPort, "--certs-dir=.minio/certs", "--config-dir=/tmp", "/opt/intel/eii/data/")
 	err := cmd.Run()
 	if err != nil {
 		glog.Errorf("Not able to start minio server: %v", err)

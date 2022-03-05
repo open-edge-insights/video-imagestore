@@ -7,5 +7,5 @@ volumes:
   imagestoredata:
     name: vol-imagestoredata
     size: 1Gi
-    location: "/data"
-    hostpath: "/opt/intel/eii/data"
+    location: "/opt/intel/eii/data/image-store-bucket"
+    hostpath: "/opt/intel/eii/data/image-store-bucket"
