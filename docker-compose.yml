@@ -60,7 +60,7 @@ services:
     networks:
       - eii
     volumes:
-      - "$EII_INSTALL_PATH/data:/opt/intel/eii/data"
+      - "$EII_INSTALL_PATH/data:/data"
       - "vol_eii_socket:${SOCKET_DIR}"
       - "vol_imagestore_conf:/tmp"
       - ./Certificates/ImageStore:/run/secrets/ImageStore:ro

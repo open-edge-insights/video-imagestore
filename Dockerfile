@@ -75,10 +75,10 @@ ENV CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
 COPY --from=builder ${CMAKE_INSTALL_PREFIX}/lib ${CMAKE_INSTALL_PREFIX}/lib
 COPY --from=builder ${ARTIFACTS}/ .
 RUN mkdir -p .minio/certs/CAs && \
-    mkdir /opt/intel/eii/data &&\
-    chown -R ${EII_UID}:${EII_UID} /opt/intel/eii/data && \
+    mkdir /data &&\
+    chown -R ${EII_UID}:${EII_UID} /data && \
     chown -R ${EII_UID}:${EII_UID} /tmp/ && \
-    chmod -R 760 /opt/intel/eii/data && \
+    chmod -R 760 /data && \
     chmod -R 760 /tmp/
 
 #ARG EII_INSTALL_PATH
