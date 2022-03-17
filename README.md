@@ -1,16 +1,17 @@
-**Contents**
+# Contents
 
-- [ImageStore Module](#imagestore-module)
+- [Contents](#contents)
+  - [ImageStore Module](#imagestore-module)
   - [Configuration](#configuration)
     - [Detailed description on each of the keys used](#detailed-description-on-each-of-the-keys-used)
 
-# ImageStore Module
+## ImageStore Module
 
-The Image Store component of EII comes as a separate container which primarily
-subscribes to the stream that comes out of the VideoAnalytics app via EII
-MessageBus and stores the frame into minio for historical analysis.
+The Image Store component of Open Edge Insights (OEI) comes as a separate container which primarily subscribes to the stream that comes out of the VideoAnalytics app via MessageBus and stores the frame into minio for historical analysis.
 
-The high level logical flow of ImageStore is as below:
+>**Note:** In this document, you will find labels of 'Edge Insights for Industrial (EII)' for filenames, paths, code snippets, and so on. Consider the references of EII as Open Edge Insights (OEI). This is due to the product name change of EII as OEI.
+
+The high level logical flow of ImageStore is as follows:
 
 1. The messagebus subscriber in ImageStore will subscribe to the VideoAnalytics
    published classified result (metadata, frame) on the messagebus.
@@ -21,28 +22,26 @@ The high level logical flow of ImageStore is as below:
    The payload format is as follows for:
    - Store interface:
 
-     ```
+     ```sh
         Request: map ("command": "store","img_handle":"$handle_name"),[]byte($binaryImage)
         Response : map ("img_handle":"$handle_name", "error":"$error_msg") ("error" is optional and available only in case of error in execution.)
      ```
 
    - Read interface:
 
-     ```
+     ```sh
         Request : map ("command": "read", "img_handle":"$handle_name")
         Response : map ("img_handle":"$handle_name", "error":"$error_msg"),[]byte($binaryImage) ("error" is optional and available only in case of error in execution. And $binaryImage is available only in case of successful read)
      ```
 
 ## Configuration
 
-All the ImageStore module configuration are added into etcd (distributed
-key-value data store) under `AppName` as mentioned in the
-environment section of this app's service definition in docker-compose.
+All the ImageStore module configuration are added into etcd (distributed key-value data store) under `AppName` as mentioned in the environment section of this app's service definition in docker-compose.
 
 If `AppName` is `ImageStore`, then the app's config would look like as below
  for `/ImageStore/config` key in Etcd:
 
- ```
+ ```sh
     "/ImageStore/config": {
         "minio":{
            "retentionTime":"1h",
