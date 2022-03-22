@@ -56,8 +56,6 @@ spec:
       - name: ia-imagestore
         image: {{ .Values.DOCKER_REGISTRY }}openedgeinsights/ia_imagestore:{{ .Values.EII_VERSION }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
-        securityContext:
-          privileged: true
         volumeMounts:
         {{- if eq .Values.config.imagestore.IPC true}}
         - name: {{ .Values.volumes.eii_socket.name }}
