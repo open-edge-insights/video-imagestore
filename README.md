@@ -2,8 +2,8 @@
 
 - [Contents](#contents)
   - [ImageStore Module](#imagestore-module)
-  - [Configuration](#configuration)
-    - [Detailed description on each of the keys used](#detailed-description-on-each-of-the-keys-used)
+    - [Configuration](#configuration)
+      - [Detailed description on each of the keys used](#detailed-description-on-each-of-the-keys-used)
 
 ## ImageStore Module
 
@@ -34,7 +34,7 @@ The high level logical flow of ImageStore is as follows:
         Response : map ("img_handle":"$handle_name", "error":"$error_msg"),[]byte($binaryImage) ("error" is optional and available only in case of error in execution. And $binaryImage is available only in case of successful read)
      ```
 
-## Configuration
+### Configuration
 
 All the ImageStore module configuration are added into etcd (distributed key-value data store) under `AppName` as mentioned in the environment section of this app's service definition in docker-compose.
 
@@ -51,7 +51,7 @@ If `AppName` is `ImageStore`, then the app's config would look like as below
     }
  ```
 
-### Detailed description on each of the keys used
+#### Detailed description on each of the keys used
 
 |  Key         | Description                                                                                             | Possible Values                         |Required/Optional |
 |---         |---                                                                                                    |---                                       |---              |
