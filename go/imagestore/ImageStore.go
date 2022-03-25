@@ -24,10 +24,10 @@ SOFTWARE.
 package imagestore
 
 import (
-	persistent "IEdgeInsights/ImageStore/go/imagestore/persistent"
+	persistent "imagestore/go/imagestore/persistent"
 	"io"
 	"github.com/golang/glog"
-	common "IEdgeInsights/ImageStore/common"
+	common "imagestore/common"
 )
 
 // ImageStore :  ImageStore is a struct, used for store & retrieve operations.

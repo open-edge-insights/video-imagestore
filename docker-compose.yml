@@ -53,35 +53,22 @@ services:
       ETCD_HOST: ${ETCD_HOST}
       ETCD_CLIENT_PORT: ${ETCD_CLIENT_PORT}
       ETCD_PREFIX: ${ETCD_PREFIX}
-      CertType: "zmq"
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
     ports:
       - 5669:5669
     networks:
       - eii
     volumes:
-      - "vol_imagestore_data:/data"
+      - "$EII_INSTALL_PATH/data:/data"
       - "vol_eii_socket:${SOCKET_DIR}"
       - "vol_imagestore_conf:/tmp"
-    secrets:
-      - ca_etcd
-      - etcd_ImageStore_cert
-      - etcd_ImageStore_key
+      - ./Certificates/ImageStore:/run/secrets/ImageStore:ro
+      - ./Certificates/rootca/cacert.pem:/run/secrets/rootca/cacert.pem:ro
 
 volumes:
-  vol_imagestore_data:
-    driver: local
-    driver_opts:
-      type: local
-      o: bind
-      device: ${EII_INSTALL_PATH}/data
   vol_imagestore_conf:
     driver: local
     driver_opts:
       type: tmpfs
       device: tmpfs
-
-secrets:
-  etcd_ImageStore_cert:
-    file: provision/Certificates/ImageStore/ImageStore_client_certificate.pem
-  etcd_ImageStore_key:
-    file: provision/Certificates/ImageStore/ImageStore_client_key.pem

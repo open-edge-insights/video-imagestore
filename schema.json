@@ -8,21 +8,11 @@
     "minio": {
       "type": "object",
       "required": [
-        "accessKey",
-        "secretKey",
         "retentionTime",
         "retentionPollInterval",
         "ssl"
       ],
       "properties": {
-        "accessKey": {
-          "type": "string",
-          "pattern": "^(.*)$"
-        },
-        "secretKey": {
-          "type": "string",
-          "pattern": "^(.*)$"
-        },
         "retentionTime": {
           "type": "string",
           "pattern": "^(.*)$"

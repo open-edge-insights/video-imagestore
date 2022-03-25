@@ -1,8 +1,7 @@
 {
     "config": {
+	"cert_type": ["zmq"],
         "minio": {
-            "accessKey": "admin",
-            "secretKey": "password",
             "retentionTime": "1h",
             "retentionPollInterval": "60s",
             "ssl": "false"

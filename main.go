@@ -23,13 +23,13 @@ SOFTWARE.
 package main
 
 import (
-	eiicfgmgr "ConfigMgr/eiiconfigmgr"
-	eiimsgbus "EIIMessageBus/eiimsgbus"
-	common "IEdgeInsights/ImageStore/common"
-	imagestore "IEdgeInsights/ImageStore/go/imagestore"
-	isConfigMgr "IEdgeInsights/ImageStore/isconfigmgr"
-	subManager "IEdgeInsights/ImageStore/submanager"
-	util "IEdgeInsights/common/util"
+	eiicfgmgr "github.com/open-edge-insights/eii-configmgr-go/eiiconfigmgr"
+	eiimsgbus "github.com/open-edge-insights/eii-messagebus-go/eiimsgbus"
+	common "imagestore/common"
+	imagestore "imagestore/go/imagestore"
+	isConfigMgr "imagestore/isconfigmgr"
+	subManager "imagestore/submanager"
+	util "imagestore/util"
 
 	"flag"
 	"io"
