@@ -26,7 +26,6 @@ ARG ARTIFACTS="/artifacts"
 FROM ia_common:$EII_VERSION as common
 FROM ia_eiibase:${EII_VERSION} as builder
 
-
 WORKDIR ${GOPATH}/src/IEdgeInsights
 ARG MINIO_VERSION
 RUN wget -q --show-progress https://dl.minio.io/server/minio/release/linux-amd64/archive/minio.${MINIO_VERSION} && \
