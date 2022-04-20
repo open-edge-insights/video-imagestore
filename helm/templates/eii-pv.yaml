@@ -25,7 +25,7 @@ metadata:
   namespace: {{ .Values.namespace }}
   name: {{ .Values.volumes.imagestoredata.name }}
   labels:
-    type: local
+    name: "imagestore"
 spec:
   storageClassName: {{ .Values.storageClassName }}
   capacity:
